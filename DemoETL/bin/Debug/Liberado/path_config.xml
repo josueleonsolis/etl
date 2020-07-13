@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config active="false">
+<path serie="AA">C:\APPDIR\</path>
+<path serie="AAA">C:\_APPDIR\AAA\</path>
+</config>

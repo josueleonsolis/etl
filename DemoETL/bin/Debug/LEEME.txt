@@ -1,0 +1,54 @@
+Actualizaciones de la ETL
+
+/**ETLVersion 1.0.0.11**/
+Fecha: 23/08/2018
+Modificaciones:
+1.-Se agrega la funcionalidad de sustitución de complento de Pagos para SyteLine
+2.-En la tabla MXEIRQ se agrega el campo V9CFDIREL (utilizado para sustitución de complento de Pagos)
+3.-Se agrega la tablaZMX_MXEIRelatedPayment (utilizado para sustitución de complento de Pagos)
+4.-Se agrega funcionalidad de calcular o no el impuesto (configurado desde el sistema)
+5.-Se corrige el rolback cuando la unidad de medida no esta registrada
+6.-Se agregra campo VQUUT1 para frisco.
+7.-Se corrige error en consulta de complemto de pago por detalle en formato de fecha para xa
+8.-Correcion para consulta de metodo de pago cuando existen rfc repetidos con diferentes claves.
+
+
+/**ETLVersion 1.0.0.10**/
+Fecha: 12/09/2018
+Modificaciones:
+1.Correcion de replace en las contraseñas
+
+
+
+/**ETLVersion 1.0.0.9**/
+Fecha: 13/07/2018
+Modificaciones:
+1.-Se corrige el bloqueo de tablas en SL utilizando WITH (NOLOCK) en las consultas
+2.-Se corrige Bug en XA de no regresar estados 10 para no recibir registros duplicados.
+
+/**ETLVersion 1.0.0.8**/
+Fecha: 04/06/2018
+Modificaciones:
+1.-Se corrige el bug de XA que elimina los impuestos cuando son contrados por que ingresan 2 veces al ZMX_RequestERPVoucher
+2.-Se corrige el bug de los sistemas que no convierten $L en < y $G en >
+SPModificados:
+1.-ZMX_GETStringETL
+
+/**ETLVersion 1.0.0.7**/
+Fecha: 20/02/2018
+Modificaciones:
+1.-Se agrega la funcionalidad de complento de Pagos para XA
+2.-Se agrega la funcionalidad del peso por articulo
+Campos nuevos:
+MXEIRQ-V9FPCD -Para Complemento de Pagos 
+MXEIDT-V3CEUW -Para CE
+
+/**ETLVersion 1.0.0.6**/
+Fecha: 29/01/2018
+Modificaciones:
+1.-Se agrega la funcionalidad de reimprimir Addendas y Comentarios a facturas timbradas
+
+/**ETLVersion 1.0.0.5**/
+Fecha: 19/01/2018
+Modificaciones:
+1.-Se agrega funcionalidad de complemento de impuestos locales

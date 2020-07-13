@@ -1,0 +1,114 @@
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.exe.config
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.exe
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.pdb
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\ETLCountryPack.dll
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\ETLCountryPack.pdb
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.exe
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.pdb
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\Common.Logging.dll
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\ZMX_DataExtraction\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+E:\ETL Sustitucion Comprobante pago\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V20\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache

@@ -1,0 +1,41 @@
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\Model.xml
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\refactor.xml
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\postdeploy.sql
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\predeploy.sql
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+c:\users\feuan\documents\visual studio 2015\Projects\ZMX_DataExtraction\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\Model.xml
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\refactor.xml
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\postdeploy.sql
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\predeploy.sql
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\Model.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\refactor.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\postdeploy.sql
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\predeploy.sql
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V11\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\Model.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\refactor.xml
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\postdeploy.sql
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\predeploy.sql
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb

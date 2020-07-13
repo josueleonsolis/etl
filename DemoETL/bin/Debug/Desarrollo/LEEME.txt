@@ -1,0 +1,4 @@
+Estos son los ultimos cambios 17-11-2017
+
+1.-Corriege la conexión de contraseñas que tienen * y @
+2.- Se debe ejecutar todos los scrip de la carpeta para su correcto funcionamiento.
