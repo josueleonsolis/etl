@@ -76,3 +76,15 @@ C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ET
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.dll
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.pdb
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\IBM.Data.DB2.iSeries.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Message.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.dll
+C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.pdb

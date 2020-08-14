@@ -554,7 +554,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
 
         public static string InsertPaymentsInvoice { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
   INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI)
-  VALUES('{4}','3.3','{1}','{2}',  ISNULL(convert(varchar(10), @V0DATE, 111),'' ) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
+  VALUES('{4}','3.3','{1}','{2}',  ISNULL(convert(varchar(10), @V0DATE, 103), convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
   ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}'
   WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}'
   IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
@@ -574,7 +574,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
 
         public static string InsertPaymentsInvoiceWhitCol { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
         INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI {5})
-        VALUES('{4}','3.3','{1}','{2}', CAST(ISNULL(NULLIF(@V0DATE,''), GETDATE())AS DATETIME) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
+        VALUES('{4}','3.3','{1}','{2}', ISNULL(convert(varchar(10), @V0DATE, 103), convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
         ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}' {7} WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}' 
         IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
         UPDATE ZMX_MXEIPY WITH(ROWLOCK) SET VQTCOMP=@VQTCOMP,VQCLIEN=@VQCLIEN,VQSEQN=@VQSEQN,VQPDAT=@VQPDAT,VQSTMT=@VQSTMT,VQPCUR=@VQPCUR,VQEXRT=@VQEXRT,VQPAMT=@VQPAMT,VQPMOP=@VQPMOP,VQDACT=@VQDACT,VQUUT1=@VQUUT1
@@ -639,6 +639,8 @@ END
 ELSE
 SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN'
 END";
+
+        
 
         public static string InsertCfdiRelacionados { get; set; } = @"IF (@Exist = '1')
 BEGIN

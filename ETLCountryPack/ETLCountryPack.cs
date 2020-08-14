@@ -2174,9 +2174,13 @@ public class ExtractData : ConventionInputCommandOperation
         void CfdiRelacionados(string OutputData)
         {
             Console.WriteLine("Inicia extraccion documentos relacionados");
-            string InputData = string.Format(GlobalStrings.SelectCfdiRelacionados, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+            string InputData = string.Empty;
+            if (GlobalStrings.ERP != "XA")           
+                InputData = string.Format(GlobalStrings.SelectCfdiRelacionados, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);            
+            else
+                InputData = string.Format(GlobalStringsXA.SelectCfdiRelacionados, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             //string OutputData = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId);
-         
+
             ExNihiloGenericExtraction Comentarios = new ExNihiloGenericExtraction(InputData, OutputData);
             Comentarios.UseTransaction = false;
             Comentarios.Execute();
@@ -3120,7 +3124,9 @@ public class ExtractData : ConventionInputCommandOperation
                         Comentarios();
                         //
                         //Extraccion documentos relacionado
-                        GlobalStrings.ValidateCol = "0";
+                        if (GlobalStrings.ERP != "XA")
+                        { 
+                            GlobalStrings.ValidateCol = "0";
                         var InputDataCol1 = string.Format(GlobalStrings.ValidarExistenciaColumna, "amount", "ZMX_CfdiRelated");
                        var ExitsColumn1 = new ExNihiloValidarExistenciaColumna(InputDataCol1);
                         ExitsColumn1.UseTransaction = false;
@@ -3141,8 +3147,14 @@ public class ExtractData : ConventionInputCommandOperation
                             sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);
                         GlobalStrings.ValidateCol = "0";
                         CfdiRelacionados(sCfdiRelacionados);
+                        }
+                        else
+                        {
+                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);
+                            CfdiRelacionados(sCfdiRelacionados);
+                        }
                         //
-                       
+
                         //Extraccion punto de venta
                         sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
                         POS(sPos); //utilizado para en XA para obbtener Shipto
