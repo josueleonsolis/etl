@@ -312,6 +312,7 @@ public class ExtractData : ConventionInputCommandOperation
         {
             Timeout = 90000000;
             // JL - 25052020 - Validacion Multisitio
+            
             Command = (GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + query : query : query;
         }
 
@@ -1179,10 +1180,16 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-           
+            Console.WriteLine("antes de conceptos");
+            Console.WriteLine(querySelect);
             Register(new ExtractData(querySelect));
+            Console.WriteLine("despues de conceptos");
+            Console.WriteLine("match");
             Register(new MachConcepto());
+            Console.WriteLine("fin de match");
+            Console.WriteLine("unidad");
             Register(new GetIdConcepto(list));
+            Console.WriteLine("fin de unidad");
             Register(new LoadData(queryInsert));
         }
         public List<Conceptos> Getlista()
@@ -1343,7 +1350,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            
+            Console.WriteLine(querySelect);
             Register(new ConventionInputCommandOperation("CountryPack")
             { 
                 Command = querySelect,
@@ -1363,7 +1370,8 @@ public class ExtractData : ConventionInputCommandOperation
             this.querySelect = string.Format(GlobalStrings.SelecClaveUnidad, unidad);
         }
         protected override void Initialize()
-        {          
+        {
+            Console.WriteLine(querySelect);
             Register(new ConventionInputCommandOperation("CountryPack")
             {
                 Command = querySelect,

@@ -524,7 +524,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
   ISNULL(VRDSER,'''') AS VRDSER,  ISNULL(VRDFOL,'''') AS VRDFOL,  ISNULL(VRDCUR,'''') AS VRDCUR,  
   ISNULL(VREXRT,0) AS VREXRT,  ISNULL(VRMTPG,'''') AS VRMTPG,  ISNULL(VRNCUO,0) AS VRNCUO,  
   ISNULL(VRPSDO,0) AS VRPSDO,  ISNULL(VRMPAG,0) AS VRMPAG,  ISNULL(VRNSDO,0) AS VRNSDO,
-  ISNULL(VQUUT1,'''') AS VQUUT1, ISNULL(V0DATE,'''') AS V0DATE {3}
+  ISNULL(VQUUT1,'''') AS VQUUT1,CONVERT (datetime,(CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(10),GETDATE() ,103) ELSE convert(varchar(10), V0DATE, 103) END),103) AS V0DATE {3}
   FROM MXEIHD WITH (NOLOCK)  
   LEFT JOIN MXEIPY WITH (NOLOCK) ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX WITH (NOLOCK) ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
@@ -542,19 +542,19 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
   ISNULL(VRDSER,'''') AS VRDSER,  ISNULL(VRDFOL,'''') AS VRDFOL,  ISNULL(VRDCUR,'''') AS VRDCUR,  
   ISNULL(VREXRT,0) AS VREXRT,  ISNULL(VRMTPG,'''') AS VRMTPG,  ISNULL(VRNCUO,0) AS VRNCUO,  
   ISNULL(VRPSDO,0) AS VRPSDO,  ISNULL(VRMPAG,0) AS VRMPAG,  ISNULL(VRNSDO,0) AS VRNSDO,
-  ISNULL(V0DATE,'''') AS V0DATE {3}
+  CONVERT (datetime,(CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(10),GETDATE() ,103) ELSE convert(varchar(10), V0DATE, 103) END),103) AS V0DATE {3}
   FROM MXEIHD WITH (NOLOCK)  
   LEFT JOIN MXEIPY WITH (NOLOCK) ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX WITH (NOLOCK) ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
   WHERE V0CONO=''{0}'' AND V0SERIE=''{1}'' AND V0FOLIO=''{2}'' ' 
   END ";
-
+        //ISNULL(V0DATE,'''') 
         public static string ValidateCol { get; set; }
         //Agregado por JL para la valiacion de exietncia las columnas  CAST(ISNULL(NULLIF(@V0DATE,''), GETDATE())AS DATETIME)
 
         public static string InsertPaymentsInvoice { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
   INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI)
-  VALUES('{4}','3.3','{1}','{2}',  ISNULL(convert(varchar(10), @V0DATE, 103), convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
+  VALUES('{4}','3.3','{1}','{2}', ISNULL(@V0DATE, convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
   ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}'
   WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}'
   IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
@@ -574,7 +574,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
 
         public static string InsertPaymentsInvoiceWhitCol { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
         INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI {5})
-        VALUES('{4}','3.3','{1}','{2}', ISNULL(convert(varchar(10), @V0DATE, 103), convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
+        VALUES('{4}','3.3','{1}','{2}', ISNULL(@V0DATE, convert(varchar(10),GETDATE() ,103)) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
         ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}' {7} WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}' 
         IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
         UPDATE ZMX_MXEIPY WITH(ROWLOCK) SET VQTCOMP=@VQTCOMP,VQCLIEN=@VQCLIEN,VQSEQN=@VQSEQN,VQPDAT=@VQPDAT,VQSTMT=@VQSTMT,VQPCUR=@VQPCUR,VQEXRT=@VQEXRT,VQPAMT=@VQPAMT,VQPMOP=@VQPMOP,VQDACT=@VQDACT,VQUUT1=@VQUUT1
