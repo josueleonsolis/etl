@@ -3547,72 +3547,77 @@ public class ExtractData : ConventionInputCommandOperation
             GetSite();
             Console.WriteLine("Finaliza recuperando del sitio");
             //
+            Console.WriteLine("Inicia proceso de validaciones");
+            PaymentValidation();
+            Console.WriteLine("Finaliza proceso de validaciones");
 
-            //Agregado por JL para la insercion en hd cuando no haya registros en rq para xa
-            string InputData = "";
-            string OutputData = "";
-            if (GlobalStrings.ERP != "XA")
+            if (msg.bShowMsg != true)
             {
-
-                //Agregado por JL -28102019 para eliminar px y py
-                var eliminapy = string.Format(GlobalStrings.DELETEPY, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-                Console.WriteLine("Inicia proceso de eliminacion del encabezado del pago");
-                LimpiaPXPY(eliminapy);
-                Console.WriteLine("Finaliza proceso de eliminacion del encabezado del pago");
-                var eliminapX = string.Format(GlobalStrings.DELETEPX, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-                Console.WriteLine("Inicia proceso de eliminacion del detalle del pago");
-                LimpiaPXPY(eliminapX);
-                Console.WriteLine("Finaliza proceso de eliminacion del detalle del pago");
-                //
-                Console.WriteLine("Inicia proceso de creacion del comprobante");
-                if (GlobalStrings.UseMultisite)
+                //Agregado por JL para la insercion en hd cuando no haya registros en rq para xa
+                string InputData = "";
+                string OutputData = "";
+                if (GlobalStrings.ERP != "XA")
                 {
-                    var InputDataColSL = string.Format(GlobalStrings.ValidarExistenciaColumna, "V0MLSITE", "MXEIHD");
-                    ExNihiloValidarExistenciaColumnaSL ExitsColumnSL = new ExNihiloValidarExistenciaColumnaSL(InputDataColSL);
-                    ExitsColumnSL.UseTransaction = false;
-                    ExitsColumnSL.Execute();
-                    if (ExitsColumnSL.GetAllErrors().Count() > 0)
+
+                    //Agregado por JL -28102019 para eliminar px y py
+                    var eliminapy = string.Format(GlobalStrings.DELETEPY, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                    Console.WriteLine("Inicia proceso de eliminacion del encabezado del pago");
+                    LimpiaPXPY(eliminapy);
+                    Console.WriteLine("Finaliza proceso de eliminacion del encabezado del pago");
+                    var eliminapX = string.Format(GlobalStrings.DELETEPX, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                    Console.WriteLine("Inicia proceso de eliminacion del detalle del pago");
+                    LimpiaPXPY(eliminapX);
+                    Console.WriteLine("Finaliza proceso de eliminacion del detalle del pago");
+                    //
+                    Console.WriteLine("Inicia proceso de creacion del comprobante");
+                    if (GlobalStrings.UseMultisite)
                     {
-                        foreach (Exception ex in ExitsColumnSL.GetAllErrors())
+                        var InputDataColSL = string.Format(GlobalStrings.ValidarExistenciaColumna, "V0MLSITE", "MXEIHD");
+                        ExNihiloValidarExistenciaColumnaSL ExitsColumnSL = new ExNihiloValidarExistenciaColumnaSL(InputDataColSL);
+                        ExitsColumnSL.UseTransaction = false;
+                        ExitsColumnSL.Execute();
+                        if (ExitsColumnSL.GetAllErrors().Count() > 0)
+                        {
+                            foreach (Exception ex in ExitsColumnSL.GetAllErrors())
+                            {
+                                Console.WriteLine(ex.Message);
+                                VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                //Rollback();
+                            }
+                        }
+                        if (GlobalStrings.ValidateCol == "1")
+                        {
+
+                            GlobalStrings.ValidateCol = "0";
+                            GlobalStrings.ParamsPaymentSelect += ",V0MLSITE AS MLSITE,";
+                        }
+                    }
+
+
+                    GlobalStrings.ParamsPaymentSelect = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentSelect) ? GlobalStrings.ParamsPaymentSelect.Remove(GlobalStrings.ParamsPaymentSelect.Length - 1, 1) : GlobalStrings.ParamsPaymentSelect;
+                    InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.ParamsPaymentSelect);
+
+
+
+                    string InputDataCol = string.Format(GlobalStrings.ValidarExistenciaColumna, "VQUUT1", "ZMX_MXEIPY");
+                    ExNihiloValidarExistenciaColumna ExitsColumn = new ExNihiloValidarExistenciaColumna(InputDataCol);
+                    ExitsColumn.UseTransaction = false;
+                    ExitsColumn.Execute();
+                    if (ExitsColumn.GetAllErrors().Count() > 0)
+                    {
+                        foreach (Exception ex in ExitsColumn.GetAllErrors())
                         {
                             Console.WriteLine(ex.Message);
                             VoucherLog("CountryPack", 5, ex.Message, 0, 10);
                             //Rollback();
                         }
                     }
-                    if (GlobalStrings.ValidateCol == "1")
+
+                    //Agregado por JL para la validacion de la existencia de las columnas
+                    if (GlobalStrings.UseMultisite)
                     {
-
-                        GlobalStrings.ValidateCol = "0";
-                        GlobalStrings.ParamsPaymentSelect += ",V0MLSITE AS MLSITE,";
-                    }
-                }
-
-
-                GlobalStrings.ParamsPaymentSelect = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentSelect) ? GlobalStrings.ParamsPaymentSelect.Remove(GlobalStrings.ParamsPaymentSelect.Length - 1, 1) : GlobalStrings.ParamsPaymentSelect;
-                InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.ParamsPaymentSelect);
-
-
-
-                string InputDataCol = string.Format(GlobalStrings.ValidarExistenciaColumna, "VQUUT1", "ZMX_MXEIPY");
-                ExNihiloValidarExistenciaColumna ExitsColumn = new ExNihiloValidarExistenciaColumna(InputDataCol);
-                ExitsColumn.UseTransaction = false;
-                ExitsColumn.Execute();
-                if (ExitsColumn.GetAllErrors().Count() > 0)
-                {
-                    foreach (Exception ex in ExitsColumn.GetAllErrors())
-                    {
-                        Console.WriteLine(ex.Message);
-                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
-                        //Rollback();
-                    }
-                }
-
-                //Agregado por JL para la validacion de la existencia de las columnas
-                if (GlobalStrings.UseMultisite)
-                {
-                     if (GlobalStrings.ValidateCol == "1")
-                    {
+                        if (GlobalStrings.ValidateCol == "1")
+                        {
                             GlobalStrings.ValidateCol = "0";
                             InputDataCol = string.Format(GlobalStrings.ValidarExistenciaColumna, "MLSITE", "ZMX_Voucher");
                             ExitsColumn = new ExNihiloValidarExistenciaColumna(InputDataCol);
@@ -3639,75 +3644,78 @@ public class ExtractData : ConventionInputCommandOperation
                             GlobalStrings.ParamsPaymentInsert = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentInsert) ? GlobalStrings.ParamsPaymentInsert.Remove(GlobalStrings.ParamsPaymentInsert.Length - 1, 1) : GlobalStrings.ParamsPaymentInsert;
                             GlobalStrings.ParamsPaymentUpdate = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentUpdate) ? GlobalStrings.ParamsPaymentUpdate.Remove(GlobalStrings.ParamsPaymentUpdate.Length - 1, 1) : GlobalStrings.ParamsPaymentUpdate;
                             OutputData = string.Format(GlobalStrings.InsertPaymentsInvoiceWhitCol, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site, GlobalStrings.ValuesPaymentInsert, GlobalStrings.ParamsPaymentInsert, GlobalStrings.ParamsPaymentUpdate);
-                    }
-                     else
+                        }
+                        else
                             OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
+                    }
+                    else
+                        OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
                 }
-            else
-                OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-            }
-            else
-            {
-              // Console.WriteLine("SelectPaymentsInvoice");
-                InputData = string.Format(GlobalStringsXA.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-               // Console.WriteLine(InputData);
-                OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-                Console.WriteLine(InputData);
-            }
-            //
-
-            /*string InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-            string OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI,GlobalStrings.Parm_Site);*/
-                      
-            ExNihiloGenericExtraction PaymentsInvoice = new ExNihiloGenericExtraction(InputData, OutputData);
-            PaymentsInvoice.UseTransaction = false;
-            PaymentsInvoice.Execute();
-            if (PaymentsInvoice.GetAllErrors().Count() > 0)
-            {
-                foreach (Exception ex in PaymentsInvoice.GetAllErrors())
+                else
                 {
-                    Console.WriteLine(ex.Message);
-                    VoucherLog("CountryPack", 5, ex.Message, 0, 10);
-                    VoucherLog("ERP", 5, ex.Message, 0, 10);
-                    //Rollback();
+                    // Console.WriteLine("SelectPaymentsInvoice");
+                    InputData = string.Format(GlobalStringsXA.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                    // Console.WriteLine(InputData);
+                    OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
+                    Console.WriteLine(InputData);
+                    Console.WriteLine("Fecha");
                 }
+                //
+
+                /*string InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                string OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI,GlobalStrings.Parm_Site);*/
+
+                ExNihiloGenericExtraction PaymentsInvoice = new ExNihiloGenericExtraction(InputData, OutputData);
+                PaymentsInvoice.UseTransaction = false;
+                PaymentsInvoice.Execute();
+                if (PaymentsInvoice.GetAllErrors().Count() > 0)
+                {
+                    foreach (Exception ex in PaymentsInvoice.GetAllErrors())
+                    {
+                        Console.WriteLine(ex.Message);
+                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                        VoucherLog("ERP", 5, ex.Message, 0, 10);
+                        //Rollback();
+                    }
+                }
+                Console.WriteLine("Finaliza proceso de creacion del comprobante");
+
+                Console.WriteLine("Inicia proceso de verificacion de estatus del voucher");
+                VerificaStatusVoucher();//Obtiene el comprobanteId para actulizar el Log
+                Console.WriteLine("Finaliza proceso de verificacion de estatus del voucher");
+
+                Console.WriteLine("Inicia registro  en voucherLog countrypack");
+                VoucherLog("CountryPack", 10, "Extracción finalizada exitosamente", 0, 10);
+                Console.WriteLine("Finaliza registro  en voucherLog countrypack");
+
+                if (GlobalStrings.ERP != "XA")
+                {
+                    Console.WriteLine("Inicia registro en voucherLog erp");
+                    VoucherLog("ERP", 10, "Extracción finalizada exitosamente", 0, 10);
+                    Console.WriteLine("Finaliza registro en voucherLog erp");
+                }
+                else
+                {
+                    Console.WriteLine("Inicia registro en voucherLog erp");
+                    VoucherLog("ERP", 20, "Extracción finalizada exitosamente", 0, 10);
+                    Console.WriteLine("Finaliza registro en voucherLog erp");
+                }
+                //Bug de XA no regresar estados 10 para no recibir registros duplicados.
+                if (GlobalStrings.ERP != "XA")
+                {
+                    string sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosPagos, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                    CfdiRelacionados(sCfdiRelacionados);
+
+                }
+
+                Console.WriteLine("Inicia llamado a ZMX_VoucherGenSP");
+                string sEXEC_SP = @"Exec ZMX_VoucherGenSP  '" + GlobalStrings.V0SERIE + "',  '" + GlobalStrings.V0FOLIO + "',null ";
+                EXEC_SP(sEXEC_SP);
+                Console.WriteLine("Finaliza llamado a ZMX_VoucherGenSP");
+
+                Console.WriteLine("Finaliza proceso de extraccion complemento de pagos");
             }
-            Console.WriteLine("Finaliza proceso de creacion del comprobante");
-
-            Console.WriteLine("Inicia proceso de verificacion de estatus del voucher");
-            VerificaStatusVoucher();//Obtiene el comprobanteId para actulizar el Log
-            Console.WriteLine("Finaliza proceso de verificacion de estatus del voucher");
-
-            Console.WriteLine("Inicia registro  en voucherLog countrypack");
-            VoucherLog("CountryPack", 10, "Extracción finalizada exitosamente", 0, 10);
-            Console.WriteLine("Finaliza registro  en voucherLog countrypack");
-
-            if (GlobalStrings.ERP != "XA")
-            {
-                Console.WriteLine("Inicia registro en voucherLog erp");
-                VoucherLog("ERP", 10, "Extracción finalizada exitosamente", 0, 10);
-                Console.WriteLine("Finaliza registro en voucherLog erp");
-            }
-            else
-            {
-                Console.WriteLine("Inicia registro en voucherLog erp");
-                VoucherLog("ERP", 20, "Extracción finalizada exitosamente", 0, 10);
-                Console.WriteLine("Finaliza registro en voucherLog erp");
-            }
-            //Bug de XA no regresar estados 10 para no recibir registros duplicados.
-            if (GlobalStrings.ERP != "XA")
-            {
-                string sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosPagos, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-                CfdiRelacionados(sCfdiRelacionados);
-                
-            }
-
-            Console.WriteLine("Inicia llamado a ZMX_VoucherGenSP");
-            string sEXEC_SP = @"Exec ZMX_VoucherGenSP  '" + GlobalStrings.V0SERIE + "',  '" + GlobalStrings.V0FOLIO + "',null ";
-            EXEC_SP(sEXEC_SP);
-            Console.WriteLine("Finaliza llamado a ZMX_VoucherGenSP");
-
-            Console.WriteLine("Finaliza proceso de extraccion complemento de pagos");
+            
         }
         public void ValidateInvoiceType(string cono, string serie, string folio)
         {
@@ -3718,7 +3726,7 @@ public class ExtractData : ConventionInputCommandOperation
             string invoiceType = String.Empty;
             GlobalStrings.pathCFDI = getpathCFDI(serie);//Para redireccionar las Facturas dependiendo de la Serie
             string InputData = string.Format(GlobalStrings.SelectInvoiceType, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-
+         
             //Llamar al setsite
             if (GlobalStrings.ERP != "XA")
             {
@@ -3973,6 +3981,25 @@ public class ExtractData : ConventionInputCommandOperation
 
         //Metodos    
 
+        //Agregado por JL para la validacion del cliente en complementos de pagos
+        public static List<Rfc> validarRfcPayment()
+        {
+            List<Rfc> listRfcs = new List<Rfc>();
+            string InputData = string.Format(ValStrings.getRFCPayment, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+            ExNihiloValidaRFC ValidaRFC = new ExNihiloValidaRFC(InputData, listRfcs);
+            ValidaRFC.UseTransaction = false;
+            ValidaRFC.Execute();
+            if (ValidaRFC.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in ValidaRFC.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            listRfcs = ValidaRFC.Getlista();
+            return listRfcs;
+        }
+
 
         public static List<Rfc> validarRfcs()
         {
@@ -4067,6 +4094,39 @@ public class ExtractData : ConventionInputCommandOperation
             }
             listTaxes = ValidaTaxes.Getlista();
             return listTaxes;
+        }
+
+        //Agregado por JL para la validacion de los datos del pago
+        void PaymentValidation()
+        {
+            string logMessage = String.Empty;
+            List<Rfc> listRfcs = new List<Rfc>();
+            Console.WriteLine("Inicia validacion RFC");
+            listRfcs = validarRfcs();
+            Console.WriteLine("Finaliza validacion RFC:" + msg.bShowMsg);        
+
+         
+            if (msg.bShowMsg == true)
+            {
+                foreach (Rfc obj in listRfcs)
+                {
+                    if (obj.existe == "0" & obj.tipoRfc == "Company")
+                        logMessage = logMessage + string.Format(msg.msgcompany, obj.rfc);
+
+                    if (obj.existe == "0" & obj.tipoRfc == "Customer")
+                        logMessage = logMessage + string.Format(msg.msgcustomer, obj.rfc, obj.cliente);
+
+                }             
+              
+                Console.WriteLine("Inicia registro de validaciones en voucherlog contrypack");
+                VoucherLog("CountryPack", 5, logMessage, 0, 10);
+                Console.WriteLine("Finaliza registro de validaciones en voucherlog contrypack");
+
+                Console.WriteLine("Inicia registro de validaciones en voucherlog ERP");
+                VoucherLog("ERP", 5, logMessage, 0, 10);
+                Console.WriteLine("Finaliza registro de validaciones en voucherlog ERP");
+            }
+
         }
         void validaciones()
         {
@@ -4190,31 +4250,10 @@ public class ExtractData : ConventionInputCommandOperation
         {
 
             foreach (Row row in rows)
-            {
-                rfcCompania = (string)row["rfcCompania"];
-                ExNihiloExistRFC ExistRFCComania = new ExNihiloExistRFC("Company", rfcCompania, null);
-                ExistRFCComania.UseTransaction = false;
-                ExistRFCComania.Execute();
-                if (ExistRFCComania.GetAllErrors().Count() > 0)
-                {
-                    foreach (Exception ex in ExistRFCComania.GetAllErrors())
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                }
-                if (ExistRFCComania.ObjgetRFC.getIfExistRFC() != null)
-                {
-                    exist = ExistRFCComania.ObjgetRFC.getIfExistRFC();
-                    if (exist == "0")
-                        msg.bShowMsg = true;
-                }
-                else
-                    msg.bShowMsg = true;
-                this.list.Add(new Rfc() { tipoRfc = "Company", rfc = rfcCompania, existe = exist });
-                //------------------------
-                rfcCliente = (string)row["rfcCliente"];
+            {              
+             
                 clienteId = (string)row["clienteId"];
-                ExNihiloExistRFC ExistRFCCliente = new ExNihiloExistRFC("Customer", rfcCliente, clienteId);
+                ExNihiloExistRFCPayment ExistRFCCliente = new ExNihiloExistRFCPayment(clienteId);
                 ExistRFCCliente.UseTransaction = false;
                 ExistRFCCliente.Execute();
                 if (ExistRFCCliente.GetAllErrors().Count() > 0)
@@ -4232,7 +4271,8 @@ public class ExtractData : ConventionInputCommandOperation
                 }
                 else
                     msg.bShowMsg = true;
-                this.list.Add(new Rfc() { tipoRfc = "Customer", rfc = rfcCliente, existe = exist,cliente = clienteId });
+
+                this.list.Add(new Rfc() { tipoRfc = "Customer", rfc = "", existe = exist,cliente = clienteId });
                 yield return row;
             }
         }
@@ -4547,6 +4587,32 @@ public class ExtractData : ConventionInputCommandOperation
             return this.list;
         }
     }
+
+    //Agregado por JL para la validacion rfc pagos
+    public class ExNihiloExistRFCPayment : EtlProcess
+    {       
+        private string idCliente;
+        private string querySelect;
+        public ExisteRFC ObjgetRFC;
+        public ExNihiloExistRFCPayment(string clienteId)
+        {       
+        this.idCliente = clienteId;
+        }
+        protected override void Initialize()
+        {
+          
+          
+                querySelect = string.Format(ValStrings.validaRfcCustomerPayment, idCliente);
+            Register(new ConventionInputCommandOperation("CountryPack")
+            {
+                Command = querySelect,
+                Timeout = 900000
+            });
+            this.ObjgetRFC = new ExisteRFC();
+            Register(ObjgetRFC);
+        }
+    }
+
     public class ExNihiloExistRFC : EtlProcess
     {
         private string tipoRfc;
@@ -4554,6 +4620,8 @@ public class ExtractData : ConventionInputCommandOperation
         private string idCliente;
         private string querySelect;
         public ExisteRFC ObjgetRFC;
+
+      
         public ExNihiloExistRFC(string tiporfc, string rfc, string clienteId)
         {
             this.tipoRfc = tiporfc;

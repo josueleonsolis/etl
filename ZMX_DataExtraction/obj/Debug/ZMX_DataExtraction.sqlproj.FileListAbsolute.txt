@@ -39,3 +39,12 @@ C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZM
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\predeploy.sql
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
 C:\Users\jleon\Desktop\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dacpac
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\bin\Debug\ZMX_DataExtraction.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\Model.xml
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\refactor.xml
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\postdeploy.sql
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\predeploy.sql
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ZMX_DataExtraction\obj\Debug\ZMX_DataExtraction.pdb

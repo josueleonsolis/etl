@@ -42,12 +42,13 @@ namespace DemoETL
 
             //{0}=Cono,{1}=Serie,{2}=Folio,{3}=Message,{4}=INLS,{5}=ENDS,{6}=STS
             //=================================================================
+         
             Parameter1 = Convert.ToString(args[0]);
             Parameter2 = Convert.ToString(args[1]);
             Parameter3 = Convert.ToString(args[2]);
             Parameter4 = Convert.ToString(args[3]);
             Parameter5 = Convert.ToString(args[4]);       //Parameter5 = Parameter5.Replace("|","@");
-            Parameter6 = Convert.ToString(args[5]);
+            Parameter6 = Convert.ToString(args[5]).Replace("/"," ");
             //String[] parm7 = args[6].Split('#');
             Parameter7 = Convert.ToString(args[6]);
             Parameter8 = Convert.ToString(args[7]);
@@ -56,8 +57,8 @@ namespace DemoETL
             Parameter11 = Convert.ToString(args[10]);//UUID Relacionado Sustitucion
             Parameter12 = Convert.ToString(args[11]);     //XML uuid pagos relacionados 
             Parameter13 = Convert.ToString(args[12]);     //Fecha cancelacion
+            
 
-  
             //Agregado para manejar los XML
             if (Parameter11 == "SQL")
             {
