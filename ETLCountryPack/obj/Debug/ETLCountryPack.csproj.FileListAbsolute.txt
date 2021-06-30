@@ -99,3 +99,4 @@ C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtrac
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\bin\Debug\Rhino.Etl.Core.xml
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.dll
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\ETLCountryPack\obj\Debug\ETLCountryPack.csprojResolveAssemblyReference.cache

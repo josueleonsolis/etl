@@ -18,7 +18,8 @@ namespace Message
             //"DataSource=192.168.17.168; Initial Catalog=S2150caw; UserID=MXAPLUS; Password=WN7R3K; Naming=System; LibraryList=QGPL;";
             try
             {
-                iDB2Connection myConnection = new iDB2Connection(conStr);
+                
+                iDB2Connection myConnection = new iDB2Connection(conStr);               
                 //"UPDATE MXEIRQ SET  V9ERRD = 'Error Gaspar 1218' WHERE V9CONO = '01' AND V9SERIE = 'A' AND V9FOLIO = '000196' ";
 
                 //Modificado por jl para la insercion en hd cuando no haya registros en rq para xa
@@ -28,15 +29,28 @@ namespace Message
                 myCommand.Connection.Open();
                 int registros = (int)myCommand.ExecuteNonQuery();
                 myConnection.Close();
-                if (registros == 1)
+                if (GlobalStrings.Config == "0")
                 {
-                    Console.WriteLine("Actualizando UUID en RQ -Message");
-                    myExecuteQuery = OutputRQ;
+                    if (registros == 1)
+                    {
+                        Console.WriteLine("Actualizando UUID en RQ -Message");
+                        myExecuteQuery = OutputRQ;
 
-                }               
-                 else { Console.WriteLine("Actualizando UUID en HD -Message"); myExecuteQuery = OutputHD; }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Actualizando UUID en HD -Message");
+                        myExecuteQuery = OutputHD;
 
-                myCommand = new iDB2Command(myExecuteQuery, myConnection);
+                    }
+                }
+                else
+                {                  
+                        Console.WriteLine("Actualizando UUID en HD -Message");
+                        myExecuteQuery = OutputHD;                   
+                }
+
+                    myCommand = new iDB2Command(myExecuteQuery, myConnection);
                 myCommand.CommandTimeout = 9000000;
                 myCommand.Connection.Open();
                 myCommand.ExecuteNonQuery();

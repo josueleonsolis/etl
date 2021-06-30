@@ -352,33 +352,33 @@ V3UUT1 AS UFT1,V3UUT2 AS UFT2,V3UUT3 AS UFT3,V3UUA1 AS UFAMT1,V3UUA2 AS UFAMT2,V
 Insert Into ZMX_concept  WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
-VALUES('{0}','{1}',@prodServId,ISNULL(@UFT3,@noIdentification),@quantity,@unitId,
-@unit,@description,@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,@UFT3,
-@UFAMT1,@UFAMT2,@UFAMT3,@sequence,@Accountpattern,@weightPiece) ";
+VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),@quantity,RTRIM(LTRIM(@unitId)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,RTRIM(LTRIM(@UFT3)),
+@UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern,@weightPiece) ";
 
         //Agregado por JL para insertar la informacion del concepto para XA, no considera el peso
         public static string InsertNodoConceptoXA { get; set; } = @"SET @UFT3 = NULLIF(@UFT3,'');
 Insert Into ZMX_concept  WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
-VALUES('{0}','{1}',@prodServId,ISNULL(@UFT3,@noIdentification),@quantity,@unitId,
-@unit,@description,@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,@UFT3,
-@UFAMT1,@UFAMT2,@UFAMT3,@sequence,@Accountpattern) ";
+VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),@quantity,RTRIM(LTRIM(@unitId)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,@UFT3,
+@UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern) ";
 
         //{0}=voucherId,{1}=SiteRef,{2}=conceptId
         //Se modifica por bugs de codigos repetidos = ISNULL(@UFT3,@noIdentification)
         public static string UpdateNodoConcepto { get; set; } = @"  SET @UFT3 = NULLIF(@UFT3,'');
         IF EXISTS (SELECT TOP 1 voucherId,sequence FROM ZMX_concept WHERE voucherId ='{0}' AND sequence=@sequence and conceptId='{2}')
-UPDATE ZMX_concept WITH(ROWLOCK) SET SiteRef='{1}',prodServId=@prodServId,noIdentification=ISNULL(@UFT3,@noIdentification),quantity=@quantity,unitId=@unitId,
-unit=@unit,description=@description,unitvalue=@unitvalue,total=@total,discount=@discount,conceptId=@conceptId,UFT1=@UFT1,
-UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=@UFAMT3,sequence=@sequence,Accountpattern=@Accountpattern,weightPiece=@weightPiece
+UPDATE ZMX_concept WITH(ROWLOCK) SET SiteRef='{1}',prodServId=RTRIM(LTRIM(@prodServId)),noIdentification=RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),quantity=@quantity,unitId=RTRIM(LTRIM(@unitId)),
+unit=RTRIM(LTRIM(@unit)),description=RTRIM(LTRIM(@description)),unitvalue=@unitvalue,total=@total,discount=@discount,conceptId=@conceptId,UFT1=RTRIM(LTRIM(@UFT1)),
+UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=RTRIM(LTRIM(@UFAMT3)),sequence=@sequence,Accountpattern=@Accountpattern,weightPiece=@weightPiece
 WHERE voucherId = '{0}' AND sequence=@sequence and conceptId = '{2}' 
 ELSE Insert Into ZMX_concept WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
-VALUES('{0}','{1}',@prodServId,@noIdentification,@quantity,@unitId,
-@unit,@description,@unitvalue,@total,@discount,'{2}',@UFT1,@UFT2,@UFT3,
-@UFAMT1,@UFAMT2,@UFAMT3,@sequence,@Accountpattern,@weightPiece); ";
+VALUES('{0}','{1}',@prodServId,RTRIM(LTRIM(@noIdentification)),@quantity,RTRIM(LTRIM(@unitId)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,'{2}',RTRIM(LTRIM(@UFT1)),@UFT2,@UFT3,
+@UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern,@weightPiece); ";
 
         //Agregado por JL 13112019 para la eliminacion de los conceptos
         public static string DeleteConceptosInvoice { get; set; } = @"
@@ -1053,22 +1053,22 @@ ELSE RTRIM(SUBSTR(V3UUT3,1,15)) END AS noIdentification,
         public static string InsertNodoConcepto { get; set; } = @"Insert Into ZMX_concept (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern)
-VALUES('{0}','{1}',@prodServId,@industrialNumber,@quantity,@unitId,
-@unit,@description,@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,@UFT3,
-@UFAMT1,@UFAMT2,@UFAMT3,@sequence,@Accountpattern) ";
+VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),@industrialNumber,@quantity,RTRIM(LTRIM(@unitId)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,RTRIM(LTRIM(@UFT3)),
+@UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern) ";
 
         //{0}=voucherId,{1}=SiteRef,{2}=conceptId
         public static string UpdateNodoConcepto { get; set; } = @"IF EXISTS (SELECT * FROM ZMX_concept WHERE voucherId ='{0}' AND sequence=@sequence)     
-UPDATE ZMX_concept SET SiteRef='{1}',prodServId=@prodServId,noIdentification=@industrialNumber,quantity=@quantity,unitId=@unitId,
-unit=@unit,description=@description,unitvalue=@unitvalue,total=@total,discount=@discount,conceptId=@conceptId,UFT1=@UFT1,
-UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=@UFAMT3,sequence=@sequence,Accountpattern=@Accountpattern,
+UPDATE ZMX_concept SET SiteRef='{1}',prodServId=RTRIM(LTRIM(@prodServId)),noIdentification=RTRIM(LTRIM(@industrialNumber)),quantity=@quantity,unitId=RTRIM(LTRIM(@unitId)),
+unit=RTRIM(LTRIM(@unit)),description=RTRIM(LTRIM(@description)),unitvalue=@unitvalue,total=@total,discount=@discount,conceptId=@conceptId,UFT1=@UFT1,
+UFT2=@UFT2,UFT3=RTRIM(LTRIM(@UFT3)),UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=RTRIM(LTRIM(@UFAMT3)),sequence=@sequence,Accountpattern=@Accountpattern,
 WHERE voucherId = '{0}' AND  sequence=@sequence 
 ELSE Insert Into ZMX_concept (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern)
-VALUES('{0}','{1}',@prodServId,@noIdentification,@quantity,@unitId,
-@unit,@description,@unitvalue,@total,@discount,'{2}',@UFT1,@UFT2,@UFT3,
-@UFAMT1,@UFAMT2,@UFAMT3,@sequence,@Accountpattern) ;
+VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(@noIdentification)),@quantity,RTRIM(LTRIM(@unitId)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,'{2}',@UFT1,@UFT2,RTRIM(LTRIM(@UFT3)),
+@UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern) ;
  --DELETE ZMX_TaxConcept WHERE conceptId ='{2}'";
         //*******************************************************************//
 

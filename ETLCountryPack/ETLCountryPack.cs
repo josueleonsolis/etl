@@ -1013,9 +1013,9 @@ public class ExtractData : ConventionInputCommandOperation
         public string invoceType;
         public override IEnumerable<Row> Execute(IEnumerable<Row> rows)
         {
-           
+            
             foreach (Row row in rows)
-            {
+            {              
                 invoceType = (string)row["TipoComprobante"];
                 
                 //if (StatusId == "UPDATE")
@@ -1044,7 +1044,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         public string getSchemaXA()
         {
-            return this.schema;
+            return this.schema.Trim();
         }
         public string getTimeStamp()
         {
@@ -1620,7 +1620,7 @@ public class ExtractData : ConventionInputCommandOperation
             this.querySelect = InputData;
         }
         protected override void Initialize()
-        {         
+        {
             Register(new ConventionInputCommandOperation("ERP")
             {
                 Command = (GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + querySelect : querySelect : querySelect,
@@ -1628,6 +1628,8 @@ public class ExtractData : ConventionInputCommandOperation
             //Command = (GlobalStrings.ERP != "XA") ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + querySelect : querySelect,                
             Timeout = 9000000,
             });
+
+           
             this.ObjgetType = new GetInvoiceType();
             Register(ObjgetType);
         }
@@ -3904,7 +3906,13 @@ public class ExtractData : ConventionInputCommandOperation
             //Consigo el schema
             schema = GetSchema();
             if (schema.Equals(null)) //Se agrega por error de actualizacion en MXEIRQ
+            {
+                Console.WriteLine("Schema NULLL");
                 schema = ConnectionData.SchemaDefault;
+            }
+            else
+                Console.WriteLine("Schema recuperado");
+
             Console.WriteLine("Schema");
             Console.WriteLine(schema);
             UpdateConexionERP(customConfig,schema);

@@ -176,7 +176,8 @@ namespace DemoETL
                     {
                         Parameter7 = "20";
                     }
-
+                    ETL j = new ETL();
+                    j.getpathCFDI(Parameter5);
                     objEtl.VoucherLog("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10)); Console.WriteLine("VoucherLog");
                 }
                 else
