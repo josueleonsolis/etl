@@ -81,3 +81,4 @@ C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtrac
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\Message\bin\Debug\Common.Logging.dll
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\Message\bin\Debug\ETLCountryPack.pdb
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\Message\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\Message\obj\Debug\Message.csprojResolveAssemblyReference.cache

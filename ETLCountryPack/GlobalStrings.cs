@@ -435,6 +435,7 @@ WHERE c.voucherId=  '{0}' ;
 DELETE  FROM ZMX_Concept WHERE voucherId=  '{0}' ; ";
 
 
+        //todo:analizar si aun es neceseario es calculate
         public static string SelectImpuestosCountryPack { get; set; } = @"SELECT taxId,factor,tasaOquote,type, erpSat AS impuestoERP, (SELECT CalculateXML FROM ZMX_ConfigCFDI WITH (NOLOCK) ) AS  Calculate FROM zmx_taxconversion WITH (NOLOCK) ";
 
         //Se Mod. por Frisco. Sequitan las siguientes lineas
@@ -524,7 +525,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
   ISNULL(VRDSER,'''') AS VRDSER,  ISNULL(VRDFOL,'''') AS VRDFOL,  ISNULL(VRDCUR,'''') AS VRDCUR,  
   ISNULL(VREXRT,0) AS VREXRT,  ISNULL(VRMTPG,'''') AS VRMTPG,  ISNULL(VRNCUO,0) AS VRNCUO,  
   ISNULL(VRPSDO,0) AS VRPSDO,  ISNULL(VRMPAG,0) AS VRMPAG,  ISNULL(VRNSDO,0) AS VRNSDO,
-  ISNULL(VQUUT1,'''') AS VQUUT1,CONVERT (datetime,(CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(20),GETDATE() ,120) ELSE convert(varchar(20), V0DATE, 120) END),120) AS V0DATE {3}
+  ISNULL(VQUUT1,'''') AS VQUUT1,(CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(19),GETDATE() ,120) ELSE convert(varchar(19), V0DATE, 120) END) AS V0DATE {3}
   FROM MXEIHD WITH (NOLOCK)  
   LEFT JOIN MXEIPY WITH (NOLOCK) ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX WITH (NOLOCK) ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
@@ -542,7 +543,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
   ISNULL(VRDSER,'''') AS VRDSER,  ISNULL(VRDFOL,'''') AS VRDFOL,  ISNULL(VRDCUR,'''') AS VRDCUR,  
   ISNULL(VREXRT,0) AS VREXRT,  ISNULL(VRMTPG,'''') AS VRMTPG,  ISNULL(VRNCUO,0) AS VRNCUO,  
   ISNULL(VRPSDO,0) AS VRPSDO,  ISNULL(VRMPAG,0) AS VRMPAG,  ISNULL(VRNSDO,0) AS VRNSDO,
-  CONVERT (datetime,(CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(20),GETDATE() ,120) ELSE convert(varchar(20), V0DATE, 120) END),120) AS V0DATE {3}
+  (CASE WHEN isnull(V0DATE ,'''') = ''19000101'' THEN convert(varchar(19),GETDATE() ,120) ELSE convert(varchar(19), V0DATE, 120) END) AS V0DATE {3}
   FROM MXEIHD WITH (NOLOCK)  
   LEFT JOIN MXEIPY WITH (NOLOCK) ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX WITH (NOLOCK) ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
@@ -554,7 +555,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
 
         public static string InsertPaymentsInvoice { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
   INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI)
-  VALUES('{4}','3.3','{1}','{2}', convert(varchar(20),isnull(@v0date, GETDATE()),120) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
+  VALUES('{4}','3.3','{1}','{2}', convert(datetime,isnull(@v0date, GETDATE()),120) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}')
   ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}'
   WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}'
   IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
@@ -574,7 +575,7 @@ EXECUTE sp_executesql N'SELECT UPPER(SUBSTRING(V0TCOMP,1,1)) AS VQTCOMP,UPPER(V0
 
         public static string InsertPaymentsInvoiceWhitCol { get; set; } = @"IF NOT EXISTS(SELECT top 1 serie,folio  FROM ZMX_Voucher WITH (NOLOCK) WHERE  SiteRef='{4}' AND  serie = '{1}' AND folio = '{2}')
         INSERT INTO ZMX_Voucher WITH(ROWLOCK) (SiteRef, version, serie, folio, date, numberCertificate, certificate, subTotal, total, currency, expeditionPlace, voucherType, voucherId, customer, relationType, siteERP, Uf_pathCFDI {5})
-        VALUES('{4}','3.3','{1}','{2}', convert(varchar(20),isnull(@v0date, GETDATE()),120) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
+        VALUES('{4}','3.3','{1}','{2}', convert(datetime,isnull(@v0date, GETDATE()),120) ,'','','0','0','XXX','','P',NEWID(),@VQCLIEN,'04','{0}','{3}' {6})
         ELSE UPDATE ZMX_Voucher WITH(ROWLOCK) SET SiteRef='{4}', version = '3.3', currency = 'XXX', voucherType = 'P', customer = @VQCLIEN, relationType = '04', siteERP = '{0}', Uf_pathCFDI = '{3}' {7} WHERE  SiteRef='{4}' AND serie = '{1}' AND folio = '{2}' 
         IF EXISTS( SELECT top 1 VQSERIE,VQFOLIO FROM ZMX_MXEIPY WITH (NOLOCK) WHERE VQCONO='{0}' AND VQSERIE='{1}' AND VQFOLIO='{2}' AND VQSEQN=@VQSEQN)
         UPDATE ZMX_MXEIPY WITH(ROWLOCK) SET VQTCOMP=@VQTCOMP,VQCLIEN=@VQCLIEN,VQSEQN=@VQSEQN,VQPDAT=@VQPDAT,VQSTMT=@VQSTMT,VQPCUR=@VQPCUR,VQEXRT=@VQEXRT,VQPAMT=@VQPAMT,VQPMOP=@VQPMOP,VQDACT=@VQDACT,VQUUT1=@VQUUT1
@@ -1141,7 +1142,7 @@ WHERE V9CONO = '{0}' AND V9SERIE =  '{1}' AND V9FOLIO = '{2}' AND VARCHAR_FORMAT
   COALESCE(VRDSER,'') AS VRDSER,  COALESCE(VRDFOL,'') AS VRDFOL,  COALESCE(VRDCUR,'') AS VRDCUR,  
   COALESCE(VREXRT,0) AS VREXRT,  COALESCE(VRMTPG,'') AS VRMTPG,  COALESCE(VRNCUO,0) AS VRNCUO,  
   COALESCE(VRPSDO,0) AS VRPSDO,  COALESCE(VRMPAG,0) AS VRMPAG,  COALESCE(VRNSDO,0) AS VRNSDO ,  
-CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (VARCHAR_FORMAT(V0DATE,'YYYY-MM-DD') )
+CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (V0DATE)
 ELSE (SELECT  (cast(V0DATE as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS V0DATE
   FROM MXEIHD  
   LEFT JOIN MXEIPY ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 

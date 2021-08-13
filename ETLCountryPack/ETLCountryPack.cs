@@ -3646,13 +3646,20 @@ public class ExtractData : ConventionInputCommandOperation
                             GlobalStrings.ParamsPaymentInsert = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentInsert) ? GlobalStrings.ParamsPaymentInsert.Remove(GlobalStrings.ParamsPaymentInsert.Length - 1, 1) : GlobalStrings.ParamsPaymentInsert;
                             GlobalStrings.ParamsPaymentUpdate = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentUpdate) ? GlobalStrings.ParamsPaymentUpdate.Remove(GlobalStrings.ParamsPaymentUpdate.Length - 1, 1) : GlobalStrings.ParamsPaymentUpdate;
                             OutputData = string.Format(GlobalStrings.InsertPaymentsInvoiceWhitCol, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site, GlobalStrings.ValuesPaymentInsert, GlobalStrings.ParamsPaymentInsert, GlobalStrings.ParamsPaymentUpdate);
+                            Console.WriteLine(OutputData);
                         }
                         else
+                        {
                             OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
+                            Console.WriteLine(OutputData);
+                        }
                     }
                     else
+                    {
                         OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-                }
+                        Console.WriteLine(OutputData);
+                    }
+                    }
                 else
                 {
                     // Console.WriteLine("SelectPaymentsInvoice");
