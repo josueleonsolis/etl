@@ -335,7 +335,7 @@ public class ExtractData : ConventionInputCommandOperation
                 GlobalStrings.formaPago = (string)row["formaPago"];
                 GlobalStrings.metodoPago = (string)row["metodoPago"];
                 GlobalStrings.rfcReceptor = (string)row["rfcReceptor"];
-                GlobalStrings.cliente = (string)row["cliente"];
+                GlobalStrings.cliente = (string)row["cliente"];              
                 yield return row;
             }
         }
@@ -496,8 +496,8 @@ public class ExtractData : ConventionInputCommandOperation
                 if (factorConversion != 1 & factorConversion != 0)//Es una conversión de unidades
                 {
                     row["unit"] = GetclaveUnidad.Objgetclaveunidad.getnombreUnidad().Trim();
-                    row["quantity"] = Decimal.Round((decimal)row["quantity"] * factorConversion, 6);
-                    row["unitvalue"] = Decimal.Round((decimal)row["unitvalue"] / factorConversion, 6);
+                    row["quantity"] = (decimal)row["quantity"] * factorConversion;
+                    row["unitvalue"] = (decimal)row["unitvalue"] / factorConversion;
                     if (GlobalStrings.UseConfigDecimals)                    
                         row["total"] = Decimal.Round(Decimal.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
                     else
