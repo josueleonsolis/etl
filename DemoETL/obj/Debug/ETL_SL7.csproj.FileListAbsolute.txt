@@ -1,0 +1,24 @@
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.exe.config
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\SL7.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\SL7.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.csprojResolveAssemblyReference.cache
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.exe
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.exe.config
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.exe
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\ETL_SL7.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\SL7.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\SL7.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.exe
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\DemoETL\obj\Debug\ETL_SL7.pdb

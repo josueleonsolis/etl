@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<config active="true" directhd="0" getSubtotal="true" UseConfigDecimals="false" UseMultisite="false">
+<config active="true" directhd="0" getSubtotal="true" UseConfigDecimals="false" UseMultisite="false" UseShiptoXA="false">
 <path serie="AF">C:\_APPDIR</path>
 <path serie="CM">C:\_APPDIR\CIMATIC</path>
 </config>

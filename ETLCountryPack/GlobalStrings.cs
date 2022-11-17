@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,9 @@ namespace ETLCountryPack
         public static string StringConnectionERP { get; set; } = String.Empty;
         public static string ProviderConnectionERP { get; set; } = String.Empty;
         public static string SchemaDefault { get; set; } = String.Empty;
+       public static ConnectionStringSettings ConexionSettingERP { get; set; }
+
+        public static ConnectionStringSettings ConexionSettingCFDI { get; set; }
     }
     public class Conceptos
     {
@@ -91,7 +95,11 @@ namespace ETLCountryPack
         public static bool UseConfigDecimals { get; set; } = false;
         //Agregado por JL -25052020 para el manejo de la configuracion Multisite
         public static bool UseMultisite { get; set; } = false;
+        //Agregado por JL -25032022 para el manejo de la configuracion UseShiptoXA  
+        public static bool UseShiptoXA { get; set; } = false;
         //
+       //Agregado por JL para almacenar el tipo de documento
+        public  static string TypeCFDI { get; set; }
         public static string SiteERP { get; set; } = String.Empty;
         public static string V0CONO { get; set; } = String.Empty;
         public static string V0SERIE { get; set; } = String.Empty;
@@ -126,6 +134,8 @@ namespace ETLCountryPack
         //Agregado por JL - 23102019 para procesar la informacion de los detalles del cv
         public static List<CompleVehiDet> ListDetCV { get; set; }
         //
+        //Agregado por JL para almacenar el uso del CFDI
+        public static string UseCFDI { get; set; } = String.Empty;
         //Agregado por jl para la validacion de la existencia de las columnas
         public static string ValidarExistenciaColumna { get; set; } = @"IF EXISTS(SELECT 1 FROM sys.columns  WHERE Name = N'{0}' AND Object_ID = Object_ID(N'{1}'))
             BEGIN
@@ -179,7 +189,18 @@ namespace ETLCountryPack
         public static string DELETEPY { get; set; } = @"DELETE FROM ZMX_MXEIPY WITH(ROWLOCK) WHERE VQCONO = '{0}' AND VQSERIE = '{1}' AND VQFOLIO = '{2}'";
         public static string UPDATEMXEIPY { get; set; } = @"UPDATE MXEIPY  WITH(ROWLOCK) SET SITEREF='{2}' WHERE ISNULL(VQSERIE,'')='{0}' AND VQFOLIO='{1}'";
         public static string DELETEPX { get; set; } = @"DELETE FROM ZMX_MXEIPX WITH(ROWLOCK) WHERE VRCONO = '{0}' AND VRSERIE = '{1}' AND VRFOLIO = '{2}'";
+
+        public static string DELETETAXSMULTI { get; set; } = @"DELETE t FROM ZMX_TaxConcept_Multi t  WITH  (NOLOCK)
+                        INNER JOIN ZMX_MXEIPX PX  WITH  (NOLOCK) ON PX.VRDSER=t.serie AND VRDFOL=t.folio AND PX.VRCONO=t.SiteRef
+                        WHERE VRFOLIO='{2}' AND VRSERIE='{1}' AND VRCONO='{0}'";
         public static string UPDATEMXEIPX { get; set; } = @"UPDATE "+ ((GlobalStrings.UseMultisite) ? "MXEIPX_MST": "MXEIPX")+ " WITH(ROWLOCK) SET VRDCUR='{2}',VREXRT='{3}',VRMTPG='{4}',VRNCUO='{5}',VRPSDO='{6}',VRMPAG='{7}',VRNSDO='{8}',VRDCID='{10}' WHERE ISNULL(VRDSER,'')='{0}' AND VRDFOL='{1}' AND VRSERIE='{2}' AND VRFOLIO='{3}' ";
+        //Agregado para pagos Multisite Impuestos
+        public static string SelectTaxesMulti { get; set; } = @" SELECT t.SiteRef,t.Base,t.Tax,t.TypeFactor,t.TasaOquote,t.Total,t.TaxConceptMultisiteID,t.UUID_DocRelated,t.Type_Tax,t.UFT1,t.UFD1,t.UFAMT1,t.Serie,t.Folio,t.CurrencyInvoice,t.TotalInvoice FROM ZMX_TaxConcept_Multi_mst t  WITH  (NOLOCK)
+                        INNER JOIN MXEIPX_mst PX  WITH  (NOLOCK) ON PX.VRDSER=t.serie AND VRDFOL=t.folio
+                        WHERE VRFOLIO='{2}' AND VRSERIE='{1}' AND VRCONO='{0}' ";
+
+        public static string InsertTaxesMulti { get; set; } = @"INSERT INTO ZMX_TaxConcept_Multi  WITH(ROWLOCK) (SiteRef,Base,Tax,TypeFactor,TasaOquote,Total,TaxConceptMultisiteID,UUID_DocRelated,Type_Tax,UFT1,UFD1,UFAMT1,Serie,Folio,TotalInvoice,CurrencyInvoice)
+                                                                VALUES(@SiteRef,@Base,@Tax,@TypeFactor,@TasaOquote,@Total,@TaxConceptMultisiteID,@UUID_DocRelated,@Type_Tax,@UFT1,@UFD1,@UFAMT1,@Serie,@Folio,@TotalInvoice,@CurrencyInvoice)";
 
         public static string ValuesPaymentInsert { get; set; }
 
@@ -234,10 +255,12 @@ SELECT 'INSERT' AS Status ";
                                                    V0UUD2 AS UFD2,V0UUD3 AS UFD3,V0PORV AS purchaseOrderRevision,'' AS relationType,NEWID() AS voucherId,UPPER(SUBSTRING(V0TCOMP,1,1)) AS voucherType,V0ORDNO AS customerOrder, ISNULL(V0EXRTU,0) AS exchangeRateUSD
                                                    FROM MXEIHD WITH (NOLOCK) WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
 
+        public static string SelectComprobanteV0USGE { get; set; } = @"SELECT V0USGE FROM MXEIHD WITH (NOLOCK) WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
+
         //Agregado para multisite
         public static string SelectComprobanteSL { get; set; } = @"IF EXISTS(SELECT 1 FROM sys.columns  WHERE Name = N'V0MLSITE' AND Object_ID = Object_ID(N'MXEIHD'))
 BEGIN
-EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'''' AS stamp,'''' AS numberCertificate,'''' AS certificate,V0CPAG AS payCondition,
+EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'''' AS stamp,'''' AS numberCertificate,'''' AS certificate,V0CPAG AS payCondition,V0FPCD AS paymentMethod,V0PWCD AS paymentWay,
                                                    ABS(ISNULL(V0SUBT,0)) AS SubTotal,ABS(ISNULL(V0DESC,0)) AS discount,ABS(V0TOTL) AS total,'''' AS confirmation, V0CURR AS currency,V0EXRT AS exchangeRate,V0PONB AS purchaseOrder,
                                                    V0PODT AS PODate,V0SLSR AS saleRepresentative,UPPER(V0CLIEN) AS customer,V0FOB AS freeLocation,V0NEMB AS shipment,V0GEMB AS billOfLanding, 
                                                    V0EMBX AS shipperVia,V0UUT1 AS UFT1,V0UUT2 AS UFT2,V0UUT3 AS UFT3,V0UUA1 AS UFAMT1,V0UUA2 AS UFAMT2,V0UUA3 AS UFAMT3,V0UUD1 AS UFD1,
@@ -246,7 +269,7 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
 												   END
 												   ELSE
 												   BEGIN 
-												   EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'''' AS stamp,'''' AS numberCertificate,'''' AS certificate,V0CPAG AS payCondition,
+												   EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'''' AS stamp,'''' AS numberCertificate,'''' AS certificate,V0CPAG AS payCondition,V0FPCD AS paymentMethod,V0PWCD AS paymentWay,
                                                    ABS(ISNULL(V0SUBT,0)) AS SubTotal,ABS(ISNULL(V0DESC,0)) AS discount,ABS(V0TOTL) AS total,'''' AS confirmation, V0CURR AS currency,V0EXRT AS exchangeRate,V0PONB AS purchaseOrder,
                                                    V0PODT AS PODate,V0SLSR AS saleRepresentative,UPPER(V0CLIEN) AS customer,V0FOB AS freeLocation,V0NEMB AS shipment,V0GEMB AS billOfLanding, 
                                                    V0EMBX AS shipperVia,V0UUT1 AS UFT1,V0UUT2 AS UFT2,V0UUT3 AS UFT3,V0UUA1 AS UFAMT1,V0UUA2 AS UFAMT2,V0UUA3 AS UFAMT3,V0UUD1 AS UFD1,
@@ -254,7 +277,7 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
                                                    FROM MXEIHD WITH (NOLOCK) WHERE V0CONO = ''{0}'' AND V0SERIE = ''{1}'' AND V0FOLIO = ''{2}'' '
 												   END ";
 
-        public static string SelectComprobanteSLNoMulti { get; set; } = @"SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate, V0CPAG AS payCondition,
+        public static string SelectComprobanteSLNoMulti { get; set; } = @"SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate, V0CPAG AS payCondition,V0FPCD AS paymentMethod,V0PWCD AS paymentWay,
                                                     ABS(ISNULL(V0SUBT, 0)) AS SubTotal, ABS(ISNULL(V0DESC, 0)) AS discount, ABS(V0TOTL) AS total, '' AS confirmation, V0CURR AS currency, V0EXRT AS exchangeRate, V0PONB AS purchaseOrder,
                                                     V0PODT AS PODate, V0SLSR AS saleRepresentative, UPPER(V0CLIEN) AS customer, V0FOB AS freeLocation, V0NEMB AS shipment, V0GEMB AS billOfLanding,
                                                     V0EMBX AS shipperVia, V0UUT1 AS UFT1, V0UUT2 AS UFT2, V0UUT3 AS UFT3, V0UUA1 AS UFAMT1, V0UUA2 AS UFAMT2, V0UUA3 AS UFAMT3, V0UUD1 AS UFD1,
@@ -267,14 +290,21 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
         public static string InsertVoucherWithColumn { get; set; } = @"INSERT INTO ZMX_Voucher  WITH(ROWLOCK) (version,serie,folio,date,stamp,numberCertificate,certificate,payCondition,SubTotal,discount,total,confirmation,paymentWay,
                                                             currency,expeditionPlace,paymentMethod,exchangeRate,purchaseOrder,PODate,saleRepresentative,customer,freeLocation,shipment,billOfLandig,
                                                             shipperVia,UFT1,UFT2,UFT3,UFAMT1,UFAMT2,UFAMT3,UFD1,UFD2,UFD3,purchaseOrderRevision,relationType,voucherId,voucherType,customerOrder,SiteRef,exchangeRateUSD,siteERP,Uf_pathCFDI,MLSITE)
-                                                            VALUES('{0}',@serie,@folio,@date,@stamp,@numberCertificate,@certificate,@payCondition,@SubTotal,@discount,@total,@confirmation,'{1}',@currency,'{2}','{3}',
+                                                            VALUES('{0}',@serie,@folio,@date,@stamp,@numberCertificate,@certificate,@payCondition,@SubTotal,@discount,@total,@confirmation,isnull(@paymentWay,'{1}'),@currency,'{2}',isnull(@paymentMethod,'{3}'),
                                                             @exchangeRate,@purchaseOrder,@PODate,@saleRepresentative,@customer,@freeLocation,@shipment,@billOfLanding,@shipperVia,@UFT1,@UFT2,@UFT3,@UFAMT1,@UFAMT2,@UFAMT3,
                                                             @UFD1,@UFD2,@UFD3,@purchaseOrderRevision,@relationType,@voucherId,@voucherType,@customerOrder,'{4}',@exchangeRateUSD,'{5}','{6}',@MLSITE) ";
 
 
 
-
+        //v0usge
         public static string InsertVoucher { get; set; } = @"INSERT INTO ZMX_Voucher  WITH(ROWLOCK) (version,serie,folio,date,stamp,numberCertificate,certificate,payCondition,SubTotal,discount,total,confirmation,paymentWay,
+                                                            currency,expeditionPlace,paymentMethod,exchangeRate,purchaseOrder,PODate,saleRepresentative,customer,freeLocation,shipment,billOfLandig,
+                                                            shipperVia,UFT1,UFT2,UFT3,UFAMT1,UFAMT2,UFAMT3,UFD1,UFD2,UFD3,purchaseOrderRevision,relationType,voucherId,voucherType,customerOrder,SiteRef,exchangeRateUSD,siteERP,Uf_pathCFDI)
+                                                            VALUES('{0}',@serie,@folio,@date,@stamp,@numberCertificate,@certificate,@payCondition,@SubTotal,@discount,@total,@confirmation,isnull(@paymentWay,'{1}'),@currency,'{2}',isnull(@paymentMethod,'{3}'),
+                                                            @exchangeRate,@purchaseOrder,@PODate,@saleRepresentative,@customer,@freeLocation,@shipment,@billOfLanding,@shipperVia,@UFT1,@UFT2,@UFT3,@UFAMT1,@UFAMT2,@UFAMT3,
+                                                            @UFD1,@UFD2,@UFD3,@purchaseOrderRevision,@relationType,@voucherId,@voucherType,@customerOrder,'{4}',@exchangeRateUSD,'{5}','{6}') ";
+
+        public static string InsertVoucherXA { get; set; } = @"INSERT INTO ZMX_Voucher  WITH(ROWLOCK) (version,serie,folio,date,stamp,numberCertificate,certificate,payCondition,SubTotal,discount,total,confirmation,paymentWay,
                                                             currency,expeditionPlace,paymentMethod,exchangeRate,purchaseOrder,PODate,saleRepresentative,customer,freeLocation,shipment,billOfLandig,
                                                             shipperVia,UFT1,UFT2,UFT3,UFAMT1,UFAMT2,UFAMT3,UFD1,UFD2,UFD3,purchaseOrderRevision,relationType,voucherId,voucherType,customerOrder,SiteRef,exchangeRateUSD,siteERP,Uf_pathCFDI)
                                                             VALUES('{0}',@serie,@folio,@date,@stamp,@numberCertificate,@certificate,@payCondition,@SubTotal,@discount,@total,@confirmation,'{1}',@currency,'{2}','{3}',
@@ -282,16 +312,16 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
                                                             @UFD1,@UFD2,@UFD3,@purchaseOrderRevision,@relationType,@voucherId,@voucherType,@customerOrder,'{4}',@exchangeRateUSD,'{5}','{6}') ";
 
         public static string UpdateVoucherWithColumn { get; set; } = @"UPDATE ZMX_Voucher  WITH(ROWLOCK) SET version='{0}',date=@date,stamp=@stamp,numberCertificate=@numberCertificate,certificate=@certificate,payCondition=@payCondition,
-                                                            SubTotal=@SubTotal,discount=@discount,total=@total,confirmation=@confirmation,paymentWay='{1}',currency=@currency,expeditionPlace='{2}',
-                                                            paymentMethod='{3}',exchangeRate=@exchangeRate,purchaseOrder=@purchaseOrder,PODate=@PODate,saleRepresentative=@saleRepresentative,customer=@customer,
+                                                            SubTotal=@SubTotal,discount=@discount,total=@total,confirmation=@confirmation,paymentWay=isnull(@paymentWay,'{1}'),currency=@currency,expeditionPlace='{2}',
+                                                            paymentMethod=isnull(@paymentMethod,'{3}'),exchangeRate=@exchangeRate,purchaseOrder=@purchaseOrder,PODate=@PODate,saleRepresentative=@saleRepresentative,customer=@customer,
                                                             freeLocation=@freeLocation,shipment=@shipment,billOfLandig=@billOfLanding,shipperVia=@shipperVia,UFT1=@UFT1,UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,
                                                             UFAMT2=@UFAMT2,UFAMT3=@UFAMT3,UFD1=@UFD1,UFD2=@UFD2,UFD3=@UFD3,purchaseOrderRevision=@purchaseOrderRevision,relationType=@relationType,
                                                             voucherType=@voucherType,customerOrder=@customerOrder,SiteRef='{4}',exchangeRateUSD=@exchangeRateUSD, siteERP='{6}',Uf_pathCFDI='{7}',MLSITE=@MLSITE
                                                             WHERE voucherId = '{5}' ";
 
         public static string UpdateVoucher { get; set; } = @"UPDATE ZMX_Voucher  WITH(ROWLOCK) SET version='{0}',date=@date,stamp=@stamp,numberCertificate=@numberCertificate,certificate=@certificate,payCondition=@payCondition,
-                                                            SubTotal=@SubTotal,discount=@discount,total=@total,confirmation=@confirmation,paymentWay='{1}',currency=@currency,expeditionPlace='{2}',
-                                                            paymentMethod='{3}',exchangeRate=@exchangeRate,purchaseOrder=@purchaseOrder,PODate=@PODate,saleRepresentative=@saleRepresentative,customer=@customer,
+                                                            SubTotal=@SubTotal,discount=@discount,total=@total,confirmation=@confirmation,paymentWay=isnull(@paymentWay,'{1}'),currency=@currency,expeditionPlace='{2}',
+                                                            paymentMethod=isnull(@paymentMethod,'{3}'),exchangeRate=@exchangeRate,purchaseOrder=@purchaseOrder,PODate=@PODate,saleRepresentative=@saleRepresentative,customer=@customer,
                                                             freeLocation=@freeLocation,shipment=@shipment,billOfLandig=@billOfLanding,shipperVia=@shipperVia,UFT1=@UFT1,UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,
                                                             UFAMT2=@UFAMT2,UFAMT3=@UFAMT3,UFD1=@UFD1,UFD2=@UFD2,UFD3=@UFD3,purchaseOrderRevision=@purchaseOrderRevision,relationType=@relationType,
                                                             voucherType=@voucherType,customerOrder=@customerOrder,SiteRef='{4}',exchangeRateUSD=@exchangeRateUSD, siteERP='{6}',Uf_pathCFDI='{7}'
@@ -316,8 +346,10 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
         /*{0}= rfcEmisor,{1}=Cono,{2}=Serie,{3}=Folio*/
         public static string SelectReceptorShiptopErp { get; set; } = @"SELECT V2SEAD AS shipto, '{0}' AS rfc FROM MXEIAD WITH (NOLOCK) WHERE V2TREG='S' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
 
-        /*{0}= rfcEmisor*/
-        public static string SelectReceptorCountryPack { get; set; } = @"SELECT rfc,CAST(ISNULL(name,'')AS NVARCHAR(254) ) AS name ,ISNULL(residFiscal,'') AS  residFiscal,numRegIdTrib AS numRegIdTrib,ISNULL(cfdiUse,'') AS usecfdiId, curp AS curp FROM ZMX_Customer WITH (NOLOCK) WHERE rfc='{0}' AND UPPER(customerId)='{1}' ";
+
+        public static string SelectReceptorCountryPackUSE { get; set; } = @"SELECT rfc,CAST(ISNULL(name,'')AS NVARCHAR(254) ) AS name ,ISNULL(residFiscal,'') AS  residFiscal,numRegIdTrib AS numRegIdTrib,'{2}' AS usecfdiId , curp AS curp FROM ZMX_Customer WITH (NOLOCK) WHERE rfc='{0}' AND UPPER(customerId)='{1}' ";
+        /*{0}= rfcEmisor* (GlobalStrings.TypeCFDI != "E" ? (GlobalStrings.TypeCFDI != "P" ? "ISNULL(cfdiUse,'')":"") : "ISNULL(cfdiUseEgreso,'')").ToString()*/
+        public static string SelectReceptorCountryPack { get; set; } = @"SELECT rfc,CAST(ISNULL(name,'')AS NVARCHAR(254) ) AS name ,ISNULL(residFiscal,'') AS  residFiscal,numRegIdTrib AS numRegIdTrib,{2} AS usecfdiId, curp AS curp FROM ZMX_Customer WITH (NOLOCK) WHERE rfc='{0}' AND UPPER(customerId)='{1}' ";
 
         /*{0}= comprobante,{1}= SiteRef*/
         public static string InsertReceptor { get; set; } = @"INSERT INTO ZMX_Receiver  WITH(ROWLOCK) (voucherId,SiteRef,rfc,name,residFiscal,numRegIdTrib,usecfdiId,curp,address,shipto,UFT1,UFD1)
@@ -353,7 +385,7 @@ Insert Into ZMX_concept  WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentific
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
 VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),@quantity,RTRIM(LTRIM(@unitId)),
-RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,RTRIM(LTRIM(@UFT3)),
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,RTRIM(LTRIM(@UFT1)),RTRIM(LTRIM(@UFT2)),RTRIM(LTRIM(@UFT3)),
 @UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern,@weightPiece) ";
 
         //Agregado por JL para insertar la informacion del concepto para XA, no considera el peso
@@ -362,7 +394,7 @@ Insert Into ZMX_concept  WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentific
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
 VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),@quantity,RTRIM(LTRIM(@unitId)),
-RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,@UFT3,
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,RTRIM(LTRIM(@UFT1)),RTRIM(LTRIM(@UFT2)),RTRIM(LTRIM(@UFT3)),
 @UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern) ";
 
         //{0}=voucherId,{1}=SiteRef,{2}=conceptId
@@ -371,13 +403,13 @@ RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conc
         IF EXISTS (SELECT TOP 1 voucherId,sequence FROM ZMX_concept WHERE voucherId ='{0}' AND sequence=@sequence and conceptId='{2}')
 UPDATE ZMX_concept WITH(ROWLOCK) SET SiteRef='{1}',prodServId=RTRIM(LTRIM(@prodServId)),noIdentification=RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),quantity=@quantity,unitId=RTRIM(LTRIM(@unitId)),
 unit=RTRIM(LTRIM(@unit)),description=RTRIM(LTRIM(@description)),unitvalue=@unitvalue,total=@total,discount=@discount,conceptId=@conceptId,UFT1=RTRIM(LTRIM(@UFT1)),
-UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=RTRIM(LTRIM(@UFAMT3)),sequence=@sequence,Accountpattern=@Accountpattern,weightPiece=@weightPiece
+UFT2=RTRIM(LTRIM(@UFT2)),UFT3=RTRIM(LTRIM(@UFT3)),UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=RTRIM(LTRIM(@UFAMT3)),sequence=@sequence,Accountpattern=@Accountpattern,weightPiece=@weightPiece
 WHERE voucherId = '{0}' AND sequence=@sequence and conceptId = '{2}' 
 ELSE Insert Into ZMX_concept WITH(ROWLOCK) (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
 VALUES('{0}','{1}',@prodServId,RTRIM(LTRIM(@noIdentification)),@quantity,RTRIM(LTRIM(@unitId)),
-RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,'{2}',RTRIM(LTRIM(@UFT1)),@UFT2,@UFT3,
+RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,'{2}',RTRIM(LTRIM(@UFT1)),RTRIM(LTRIM(@UFT2)),RTRIM(LTRIM(@UFT3)),
 @UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern,@weightPiece); ";
 
         //Agregado por JL 13112019 para la eliminacion de los conceptos
@@ -472,6 +504,13 @@ VALUES ('{0}','{1}','{2}',GETDATE(),'{3}','{4}','{5}') ";
         //Modificado por JL para quitar la actualizacion del voucherid
         public static string UpdateVoucherLog { get; set; } = @"UPDATE ZMX_VoucherLog WITH(ROWLOCK) SET SiteRef='{0}',voucherStatusId='{1}', Message = '{2}', registration = GETDATE(),voucherId='{3}' WHERE SiteRef='{0}' AND serie='{4}' AND folio='{5}' ";
 
+        public static string UpdateVoucherUFS { get; set; } = @"UPDATE ZMX_Voucher WITH(ROWLOCK) SET UFT1=@UFT1,UFT2=@UFT2,UFT3=@UFT3,UFAMT1=@UFAMT1,UFAMT2=@UFAMT2,UFAMT3=@UFAMT3,UFD1=@UFD1,UFD2=@UFD2,UFD3=@UFD3 WHERE SiteRef='{0}' AND serie='{1}' AND folio='{2}' ";
+
+        public static string SelectVoucherUFS { get; set; } = @"IF EXISTS (SELECT TOP 1 V0UUT1 FROM MXEIHD WITH (NOLOCK) WHERE V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}')
+SELECT V0UUT1 AS UFT1,V0UUT2 AS UFT2,V0UUT3 AS UFT3, V0UUA1 AS UFAMT1,V0UUA2 AS UFAMT2,V0UUA3 AS UFAMT3,V0UUD1 AS UFD1,V0UUD2 AS UFD2,V0UUD3 AS UFD3 FROM MXEIHD WITH (NOLOCK)
+WHERE V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}'
+ELSE 
+SELECT '' AS UFT1 , '' AS UFT2, '' AS UFT3, '' AS UFAMT1 , '' AS UFAMT2, '' AS UFAMT3, '' AS UFD1, '' AS UFD2, '' AS UFD3 ";
         public static string InicializaRegistroERP { get; set; } = @"SELECT 1";
 
         public static string ValidaVoucherMXEIRQ { get; set; } = @"IF EXISTS(SELECT TOP 1 V9CONO,V9SERIE FROM MXEIRQ WITH (NOLOCK) WHERE V9CONO='{0}' AND V9SERIE='{1}' AND V9FOLIO= '{2}')
@@ -609,36 +648,62 @@ END
 ";
         //Se agrega el campo VJIIMP-RAK 300119
         public static string SelectCfdiRelacionados { get; set; } = @"IF EXISTS(SELECT 1 FROM sys.columns  WHERE Name = N'VJIIMP' AND Object_ID = Object_ID(N'MXEIRC'))
+	BEGIN
+	   IF EXISTS(SELECT 1 FROM sys.columns  WHERE Name = N'VJRELTYPE' AND Object_ID = Object_ID(N'MXEIRC'))
+	    BEGIN
+			EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
+			BEGIN
+			SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN, ISNULL(VJIIMP,0) AS VJIIMP, VJRELTYPE  FROM MXEIRC WITH (NOLOCK)
+			WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
 
-BEGIN
+			END
+			ELSE
 
+			SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN, 0 AS VJIIMP'
+		END
+	  ELSE
+	     BEGIN
+	         EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
+			BEGIN
+			SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN, ISNULL(VJIIMP,0) AS VJIIMP  FROM MXEIRC WITH (NOLOCK)
+			WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
 
-EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
-BEGIN
-SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN, ISNULL(VJIIMP,0) AS VJIIMP FROM MXEIRC WITH (NOLOCK)
-WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
+			END
+			ELSE
 
-END
+			SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN, 0 AS VJIIMP '
+	     END
+		
+	END 
+
 ELSE
 
-SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN, 0 AS VJIIMP '
-
-END 
-
-ELSE
-
 BEGIN
+        IF EXISTS(SELECT 1 FROM sys.columns  WHERE Name = N'VJRELTYPE' AND Object_ID = Object_ID(N'MXEIRC'))
+	    BEGIN
+			EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
+			BEGIN
+			SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN, VJRELTYPE  FROM MXEIRC WITH (NOLOCK)
+			WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
 
-EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
-BEGIN
+			END
+			ELSE
 
-SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN FROM MXEIRC WITH (NOLOCK)
-WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
+			SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN'
+		END
+	ELSE
+	    BEGIN
+			EXECUTE sp_executesql N'IF EXISTS (SELECT TOP 1 VJCONO,VJSERIE FROM MXEIRC WITH (NOLOCK) WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}'' )
+			BEGIN
 
-END
+			SELECT ''1'' AS Exist, ISNULL(VJISERIE,'''') AS VJISERIE,ISNULL(VJIFOLIO,'''') AS VJIFOLIO,ISNULL(VJCONO,'''') AS VJCONO, ISNULL(VJSEQN,0) AS VJSEQN FROM MXEIRC WITH (NOLOCK)
+			WHERE VJCONO=''{0}'' AND VJSERIE=''{1}'' AND VJFOLIO=''{2}''
 
-ELSE
-SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN'
+			END
+
+			ELSE
+			SELECT ''0'' AS Exist ,'''' AS VJISERIE, '''' AS VJIFOLIO, '''' AS VJCONO, 0 AS VJSEQN'
+		END
 END";
 
         
@@ -655,10 +720,19 @@ END ";
         public static string InsertCfdiRelacionadosAmount { get; set; } = @"IF (@Exist = '1')
 BEGIN
 	DELETE ZMX_CfdiRelated WHERE voucherId='{0}' AND serie=ISNULL(@VJISERIE,'') AND folio=@VJIFOLIO ;
-	INSERT INTO ZMX_CfdiRelated WITH(ROWLOCK) (SiteRef,voucherId,uuid,serie,folio,ERPsites,AMOUNT)
+	INSERT INTO ZMX_CfdiRelated WITH(ROWLOCK) (SiteRef,voucherId,uuid,serie,folio,ERPsites {2})
 	SELECT '{1}','{0}',(SELECT ISNULL(uuid,'00000000-0000-0000-0000-000000000000') FROM  ZMX_Voucher v WITH (NOLOCK) 
     INNER JOIN ZMX_FiscalStamp f  WITH (NOLOCK)ON f.voucherId=v.voucherId
-WHERE v.serie=@VJISERIE AND v.folio=@VJIFOLIO),ISNULL(@VJISERIE,''),@VJIFOLIO,@VJCONO ,isnull(@VJIIMP,0)
+WHERE v.serie=@VJISERIE AND v.folio=@VJIFOLIO),ISNULL(@VJISERIE,''),@VJIFOLIO,@VJCONO {3}
+END ";
+
+        public static string InsertCfdiRelacionadosTypeRelation { get; set; } = @"IF (@Exist = '1')
+BEGIN
+	DELETE ZMX_CfdiRelated WHERE voucherId='{0}' AND serie=ISNULL(@VJISERIE,'') AND folio=@VJIFOLIO ;
+	INSERT INTO ZMX_CfdiRelated WITH(ROWLOCK) (SiteRef,voucherId,uuid,serie,folio,ERPsites,relationType)
+	SELECT '{1}','{0}',(SELECT ISNULL(uuid,'00000000-0000-0000-0000-000000000000') FROM  ZMX_Voucher v WITH (NOLOCK) 
+    INNER JOIN ZMX_FiscalStamp f  WITH (NOLOCK)ON f.voucherId=v.voucherId
+WHERE v.serie=@VJISERIE AND v.folio=@VJIFOLIO),ISNULL(@VJISERIE,''),@VJIFOLIO,@VJCONO ,@VJRELTYPE
 END ";
 
         public static string InsertCfdiRelacionadosPagos { get; set; } = @" IF (EXISTS (SELECT * 
@@ -956,7 +1030,13 @@ END ";
                                                                 FROM MXEIHD WHERE V0CONO ='{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
 
         //OJO se comento el exchangeRateUSD x que aun no se a creado --V0SUBT
-        public static string SelectComprobante { get; set; } = @"SELECT  RTRIM(V0SERIE) AS serie, RTRIM(V0FOLIO) AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate,V0CPAG AS payCondition,
+        public static string SelectComprobante { get; set; } = @"SELECT  RTRIM(V0SERIE) AS serie, RTRIM(V0FOLIO) AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate,V0CPAG AS payCondition,(CASE
+	WHEN V0FPCD = '' THEN '{3}'
+	WHEN V0FPCD IS NULL THEN '{3}'
+	ELSE V0FPCD END) AS paymentMethod ,(CASE
+	WHEN V0PWCD = '' THEN '{4}'
+	WHEN V0PWCD IS NULL THEN '{4}'
+	ELSE V0PWCD END) AS paymentWay,
 V0SUBT AS SubTotal,0 AS discount,V0TOTL AS total,'' AS confirmation, LTRIM(RTRIM(V0CURR)) AS currency,V0EXRT AS exchangeRate,V0PONB AS purchaseOrder,
 CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0PODT='0001-01-01' AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN ' '
 ELSE (SELECT  (cast(V0PODT as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS PODate,
@@ -972,7 +1052,13 @@ V0PORV AS purchaseOrderRevision,'' AS relationType, '00000000-0000-0000-0000-000
 FROM MXEIHD WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}'  ";
 
         //Agregado por jl para el recalculo de los importes
-        public static string SelectComprobante0 { get; set; } = @"SELECT  RTRIM(V0SERIE) AS serie, RTRIM(V0FOLIO) AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate,V0CPAG AS payCondition,
+        public static string SelectComprobante0 { get; set; } = @"SELECT  RTRIM(V0SERIE) AS serie, RTRIM(V0FOLIO) AS folio,V0DATE AS date,'' AS stamp,'' AS numberCertificate,'' AS certificate,V0CPAG AS payCondition,(CASE
+	WHEN V0FPCD = '' THEN '{3}'
+	WHEN V0FPCD IS NULL THEN '{3}'
+	ELSE V0FPCD END) AS paymentMethod ,(CASE
+	WHEN V0PWCD = '' THEN '{4}'
+	WHEN V0PWCD IS NULL THEN '{4}'
+	ELSE V0PWCD END) AS paymentWay,
 0 AS SubTotal,0 AS discount,V0TOTL AS total,'' AS confirmation, LTRIM(RTRIM(V0CURR)) AS currency,V0EXRT AS exchangeRate,V0PONB AS purchaseOrder,
 CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0PODT='0001-01-01' AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN ' '
 ELSE (SELECT  (cast(V0PODT as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS PODate,
@@ -993,15 +1079,24 @@ CASE WHEN (SELECT COUNT(*) FROM MXEIAD WHERE V2UUD1='0001-01-01' AND V2TREG='C' 
 ELSE (SELECT  (cast(V2UUD1 as char(200) ccsid 037))  FROM MXEIAD WHERE V2TREG='C' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ) END AS UFD1,
   '{0}' AS rfc FROM MXEIAD WHERE V2TREG='C' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
 
-        /*{0}= rfcEmisor,{1}=Cono,{2}=Serie,{3}=Folio*/
+        /*{0}= rfcEmisor,{1}=Cono,{2}=Serie,{3}=Folio, COALESCE(CAST(V2SEAD AS INT)-1, 0) AS address  --V2SEAD AS address*/
         public static string SelectReceptorAddressErp { get; set; } = @"SELECT V2UUT1 AS UFT1, 
 CASE WHEN (SELECT COUNT(*) FROM MXEIAD WHERE V2UUD1='0001-01-01' AND V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ) = 1 THEN ' '
 ELSE (SELECT  (cast(V2UUD1 as char(200) ccsid 037))  FROM MXEIAD WHERE V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ) END AS UFD1,
-'{0}' AS rfc, 0 AS address  --V2SEAD AS address 
+'{0}' AS rfc,0 AS address
 FROM MXEIAD WHERE V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
 
-        /*{0}= rfcEmisor,{1}=Cono,{2}=Serie,{3}=Folio*/
-        public static string SelectReceptorShiptopErp { get; set; } = @"SELECT 0 AS shipto, --V2SEAD AS shipto,
+        public static string SelectReceptorAddressErpXA { get; set; } = @"SELECT V2UUT1 AS UFT1, 
+CASE WHEN (SELECT COUNT(*) FROM MXEIAD WHERE V2UUD1='0001-01-01' AND V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ) = 1 THEN ' '
+ELSE (SELECT  (cast(V2UUD1 as char(200) ccsid 037))  FROM MXEIAD WHERE V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ) END AS UFD1,
+'{0}' AS rfc,V2SEAD AS address
+FROM MXEIAD WHERE V2TREG='R' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
+
+        /*{0}= rfcEmisor,{1}=Cono,{2}=Serie,{3}=Folio COALESCE(CAST(V2SEAD AS INT)-1, 0) AS shipto*/
+        public static string SelectReceptorShiptopErp { get; set; } = @"SELECT COALESCE(CAST(V2SEAD AS INT), 0)  AS shipto, --V2SEAD AS shipto,
+                                                                       '{0}' AS rfc FROM MXEIAD WHERE V2TREG='S' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
+
+        public static string SelectReceptorShiptoXAErp { get; set; } = @"SELECT ISNULL(V2SEAD,'0')  AS shipto, --V2SEAD AS shipto,
                                                                        '{0}' AS rfc FROM MXEIAD WHERE V2TREG='S' AND V2CONO='{1}' AND V2SERIE='{2}'AND V2FOLIO='{3}' ";
 
         public static string SelectNodoConcepto { get; set; } = @"SELECT V3CNID AS noIdentification,ABS(V3CANT) AS quantity,ABS(V3UNPR) AS unitvalue, ABS(V3DISC) AS discount,
@@ -1054,7 +1149,7 @@ ELSE RTRIM(SUBSTR(V3UUT3,1,15)) END AS noIdentification,
         public static string InsertNodoConcepto { get; set; } = @"Insert Into ZMX_concept (voucherId,SiteRef,prodServId,noIdentification,quantity,unitId,
 unit,description,unitvalue,total,discount,conceptId,UFT1,UFT2,UFT3,
 UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern)
-VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),@industrialNumber,@quantity,RTRIM(LTRIM(@unitId)),
+VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(@industrialNumber)),@quantity,RTRIM(LTRIM(@unitId)),
 RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,@UFT1,@UFT2,RTRIM(LTRIM(@UFT3)),
 @UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern) ";
 

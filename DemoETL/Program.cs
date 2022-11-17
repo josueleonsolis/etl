@@ -82,6 +82,9 @@ namespace DemoETL
             {
                 ConnectionData.ProviderConnectionERP = providerXA;
                 ConnectionData.SchemaDefault = substringsERP[6].ToString(); //Guarda el SchemaDefault
+
+                Console.WriteLine(substringsERP[6].ToString());
+                Console.WriteLine("esquema");
             }
             else
                 ConnectionData.ProviderConnectionERP = providerSQL;
@@ -170,6 +173,7 @@ namespace DemoETL
                 Console.WriteLine(Parameter10);
                 if (substringsERP[5].ToString().ToUpper() == "XA")
                 {
+                  
                     GlobalStrings.ERP = substringsERP[5].ToString().ToUpper();
                     objEtl.PreviousXA(Parameter4, Parameter5, Parameter6); Console.WriteLine("PreviousXA");
                     if (int.Parse(Parameter7) <= 10) //Bug de XA no regresar estados 10 para no recibir registros duplicados.

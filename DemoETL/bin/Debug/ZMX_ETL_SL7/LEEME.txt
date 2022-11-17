@@ -1,0 +1,5 @@
+Esta es la ETL para realizar la conexión con versiones de SQL que no pueden agregar Assemblies
+
+1.-Depositar todo el contenido de esta carpeta en la carpeta donde se encuentra la ETL de extracción
+2.-Configurar el archivo callSL7.bat ( sqlcmd -S [Servidor] -U [Usuario] -P [Pass] -i "[C:\....]")
+3.-Ejecutar en la Base de Datos el Stored Procedure SL7ETL.sql

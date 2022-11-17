@@ -1,0 +1,17 @@
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\SL7.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\SL7.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Boo.Lang.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Common.Logging.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\obj\Debug\SL7.dll
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\obj\Debug\SL7.pdb
+C:\Users\Feuan\Documents\Visual Studio 2015\Projects\ZMX_ETL_SL7\ETLCountryPack\obj\Debug\SL7.csprojResolveAssemblyReference.cache
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\SL7.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\SL7.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Boo.Lang.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Common.Logging.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Rhino.Etl.Core.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\bin\Debug\Rhino.Etl.Core.xml
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\obj\Debug\SL7.dll
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\ZMX_ETL_SL7\ETLCountryPack\obj\Debug\SL7.pdb

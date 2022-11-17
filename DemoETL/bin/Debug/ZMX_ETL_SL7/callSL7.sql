@@ -1,0 +1,13 @@
+/** JOBS Llamado de ETL ***/
+USE Mongoose_Pruebas_App;
+
+DECLARE @SITE SITETYPE
+
+SELECT @SITE = SITE FROM PARMS_MST 
+EXEC [dbo].[SetSiteSp] @SITE,NULL
+
+
+EXEC ZMX_CALLSL7
+
+
+GO

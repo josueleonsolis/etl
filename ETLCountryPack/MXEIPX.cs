@@ -7,43 +7,43 @@ using System.Xml.Serialization;
 
 namespace ETLCountryPack
 {
-    public class MXEIPX
+    public class PX
     {
         //VRSERIE
-        [XmlElement("VRSERIE")]
+        [XmlElement("SER")]
         public string SeriePago { get; set; }
         //VRFOLIO
-        [XmlElement("VRFOLIO")]
+        [XmlElement("FOL")]
         public string FolioPago { get; set; }
         //VRDSER
-        [XmlElement("VRDSER")]
+        [XmlElement("DSER")]
         public string SerieDocRel { get; set; }
         //VRDFOL
-        [XmlElement("VRDFOL")]
+        [XmlElement("DFOL")]
         public string FolioDocRel { get; set; }
         //VRDCUR
-        [XmlElement("VRDCUR")]
+        [XmlElement("CUR")]
         public string Moneda { get; set; }
         //VREXRT
-        [XmlElement("VREXRT")]
+        [XmlElement("EXRT")]
         public string TipoCambio { get; set; }
         //VRMTPG
-        [XmlElement("VRMTPG")]
+        [XmlElement("MTPG")]
         public string MetodoPago { get; set; }
         //VRNCUO
-        [XmlElement("VRNCUO")]
+        [XmlElement("NCUO")]
         public string NumParcialidad { get; set; }
         //VRPSDO
-        [XmlElement("VRPSDO")]
+        [XmlElement("PSDO")]
         public string SaldoAnterior { get; set; }
         //VRMPAG
-        [XmlElement("VRMPAG")]
+        [XmlElement("MPAG")]
         public string MontoPagado { get; set; }
         //VRNSDO
-        [XmlElement("VRNSDO")]
+        [XmlElement("NSDO")]
         public string NuevoSaldo { get; set; }
         //VRDCID
-        [XmlElement("VRDCID")]
+        [XmlElement("ID")]
         public string UUID { get; set; }
         //SETSITE
         [XmlElement("SETSITE")]

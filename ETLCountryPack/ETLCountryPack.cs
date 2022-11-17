@@ -86,6 +86,7 @@ namespace ETLCountryPack
         }
 
     }
+   
     public class JoinNodoReceptor1 : JoinOperation
     {
         protected override Row MergeRows(Row leftRow, Row rightRow)
@@ -291,7 +292,7 @@ namespace ETLCountryPack
     //Operations
     public class LoadData : ConventionOutputCommandOperation
     {
-        public LoadData(string query) : base("CountryPack")
+        public LoadData(string query) : base(ConnectionData.ConexionSettingCFDI)
         {
             Command = query;
         }
@@ -299,7 +300,7 @@ namespace ETLCountryPack
     }
     public class LoadDataERP : ConventionOutputCommandOperation
      {
-          public LoadDataERP(string query) : base("ERP")
+          public LoadDataERP(string query) : base(ConnectionData.ConexionSettingERP)
         {
             Command = query;
     }
@@ -308,7 +309,7 @@ namespace ETLCountryPack
 
 public class ExtractData : ConventionInputCommandOperation
     {
-        public ExtractData(string query) : base("ERP")
+        public ExtractData(string query) : base(ConnectionData.ConexionSettingERP)
         {
             Timeout = 90000000;
             // JL - 25052020 - Validacion Multisitio
@@ -384,6 +385,9 @@ public class ExtractData : ConventionInputCommandOperation
                     }
                 }
                 GlobalStrings.comprobanteId = (Guid)row["voucherId"];
+
+                if (!string.IsNullOrEmpty((string)row["voucherType"].ToString()))
+                GlobalStrings.TypeCFDI = row["voucherType"].ToString().ToUpper();
                 //Console.WriteLine(GlobalStrings.comprobante33Id);
                 //------------------------Prueba
                 //Para meter cambio de la moneda
@@ -623,6 +627,25 @@ public class ExtractData : ConventionInputCommandOperation
         public string getnombreUnidad()
         {
             return this.nombreUnidad;
+        }
+    }
+
+    //Agregado por JL para el uso del cfdi
+    public class GetMXEIHDUSECFDI : AbstractOperation
+    {
+       
+        public GetMXEIHDUSECFDI()
+        {
+           
+        }
+        public override IEnumerable<Row> Execute(IEnumerable<Row> rows)
+        {
+            foreach (Row row in rows)
+            {
+                if (row["V0USGE"] != null)
+                    GlobalStrings.UseCFDI = row["V0USGE"].ToString();
+                yield return row;
+            }
         }
     }
     //Agregado por JL para el manejo calculo de impuestos
@@ -883,7 +906,7 @@ public class ExtractData : ConventionInputCommandOperation
                 }
 
 
-                this.list.Add(new Conceptos() { conceptoId = (Guid)row["conceptId"], item = (string)row["noIdentification"], linea = int.Parse(row["sequence"].ToString()), dbase = calculo });
+                this.list.Add(new Conceptos() { conceptoId = (Guid)row["conceptId"], item = (string)row["noIdentification"].ToString().Trim(), linea = int.Parse(row["sequence"].ToString()), dbase = calculo });
                 //this.list.Add(new Conceptos() { conceptoId = (Guid)row["conceptId"], item = (string)row["noIdentification"], linea = int.Parse(row["sequence"].ToString()), dbase = (Math.Round((decimal)row["total"], cantdecimalesImporte) - Math.Round((decimal)row["discount"],cantdecimalesDesc)) }  );
                 //this.list.Add(new Conceptos() { conceptoId = (Guid)row["conceptId"], item = (string)row["noIdentification"], linea = int.Parse(row["sequence"].ToString()), dbase = ((decimal)row["total"]) });
                 yield return row;
@@ -1044,7 +1067,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         public string getSchemaXA()
         {
-            return this.schema.Trim();
+            return this.schema;
         }
         public string getTimeStamp()
         {
@@ -1059,7 +1082,7 @@ public class ExtractData : ConventionInputCommandOperation
             string InputDataERP = string.Format(GlobalStrings.SelectrfcEmisorERP, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             Register(new JoinEmisor()
                 .Left(new JoinCustomer()//JoinEmisor()
-                    .Left(new ConventionInputCommandOperation("ERP")
+                    .Left(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
                     {
 
                         // JL - 25052020 - Validacion Multisitio
@@ -1067,12 +1090,12 @@ public class ExtractData : ConventionInputCommandOperation
                        // Command = string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) +' '+InputDataERP,
                         Timeout = 9000000
                     })
-                    .Right(new ConventionInputCommandOperation("CountryPack")
+                    .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
                     {
                         Command = GlobalStrings.SelectClienteIdCountryPack,
                         Timeout = 9000000
                     }))
-                .Right(new ConventionInputCommandOperation("CountryPack")
+                .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
                 {
                     Command = GlobalStrings.SelectrfcEmisorCountryPack,
                     Timeout = 9000000
@@ -1096,14 +1119,15 @@ public class ExtractData : ConventionInputCommandOperation
             Register(new JoinCurrency()
                 .Left(new ExtractData(querySelect)
                     )
-                 .Right(new ConventionInputCommandOperation("CountryPack")
-                 {
+                 .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
+                 {                     
                      Command = GlobalStrings.SelectMonedaCountryPack,
                      Timeout = 9000000
                  })
                 );
             Register(new GetIdComprobante());
             Register(new LoadData(queryInsert));
+           
         }
     }
     public class ExNihiloNodoEmisor : EtlProcess
@@ -1123,12 +1147,58 @@ public class ExtractData : ConventionInputCommandOperation
             Register(new JoinNodoEmisor()
                 .Left(new ExtractData(querySelect1)
                     )
-                .Right(new ConventionInputCommandOperation("CountryPack")
+                .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
                 {
                     Command = querySelect2,
                     Timeout = 9000000
                 }));
             Register(new LoadData(queryInsert));
+        }
+    }
+
+    //Agregadi por JL para el manejo de impuestos multisitio
+    public class ExNihiloTaxesMultisite : EtlProcess
+    {
+        private string querySelect1;
+        private string querySelect2;
+        private string queryInsert;
+
+        public ExNihiloTaxesMultisite(string InputData1, string InputData2, string OutputData)
+        {
+            this.querySelect1 = InputData1;
+            this.querySelect2 = InputData2;
+            this.queryInsert = OutputData;
+        }
+        protected override void Initialize()
+        {
+            Register(new JoinNodoEmisor()
+                .Left(new ExtractData(querySelect1)
+                    )
+                .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
+                {
+                    Command = querySelect2,
+                    Timeout = 9000000
+                }));
+            Register(new LoadData(queryInsert));
+        }
+    }
+    //Agregado por JL para buscar usecfdi
+    public class ExNihiloMXEIHDUSECFDI : EtlProcess
+    {
+        private string querySelect1;
+        public ExNihiloMXEIHDUSECFDI(string InputData1)
+        {
+            this.querySelect1 = InputData1;
+           
+        }
+        protected override void Initialize()
+        {
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
+            {
+                Command = querySelect1,
+                Timeout = 9000000
+            });
+            Register(new GetMXEIHDUSECFDI());
         }
     }
     public class ExNihiloNodoReceptor : EtlProcess
@@ -1153,7 +1223,7 @@ public class ExtractData : ConventionInputCommandOperation
                     .Left(new ExtractData(querySelect1))
                     .Right(new ExtractData(querySelect2))
                     )
-                .Right(new ConventionInputCommandOperation("CountryPack")
+                .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
                 {
                     Command = querySelect3,
                     Timeout = 9000000
@@ -1180,16 +1250,16 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Console.WriteLine("antes de conceptos");
-            Console.WriteLine(querySelect);
+            //Console.WriteLine("antes de conceptos");
+            //Console.WriteLine(querySelect);
             Register(new ExtractData(querySelect));
-            Console.WriteLine("despues de conceptos");
-            Console.WriteLine("match");
+            //Console.WriteLine("despues de conceptos");
+            //Console.WriteLine("match");
             Register(new MachConcepto());
-            Console.WriteLine("fin de match");
-            Console.WriteLine("unidad");
+            //Console.WriteLine("fin de match");
+            //Console.WriteLine("unidad");
             Register(new GetIdConcepto(list));
-            Console.WriteLine("fin de unidad");
+            //Console.WriteLine("fin de unidad");
             Register(new LoadData(queryInsert));
         }
         public List<Conceptos> Getlista()
@@ -1228,7 +1298,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1250,7 +1320,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1268,7 +1338,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1285,7 +1355,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("ERP")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1305,7 +1375,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("ERP")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
             {
                 // JL - 25052020 - Validacion Multisitio
                 Command = (GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + querySelect : querySelect : querySelect,
@@ -1326,7 +1396,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1349,9 +1419,8 @@ public class ExtractData : ConventionInputCommandOperation
             this.querySelect = string.Format(GlobalStrings.SelectConceptoCountryPack, item, GlobalStrings.cliente);
         }
         protected override void Initialize()
-        {
-            Console.WriteLine(querySelect);
-            Register(new ConventionInputCommandOperation("CountryPack")
+        {            
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             { 
                 Command = querySelect,
                  Timeout = 9000000
@@ -1371,8 +1440,8 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Console.WriteLine(querySelect);
-            Register(new ConventionInputCommandOperation("CountryPack")
+           
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000
@@ -1396,7 +1465,7 @@ public class ExtractData : ConventionInputCommandOperation
         {
             Register(new JoinNodoImpuestos(list)
                     .Left(new ExtractData(querySelect))
-                    .Right(new ConventionInputCommandOperation("CountryPack")
+                    .Right(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
                     {
                         Command = GlobalStrings.SelectImpuestosCountryPack,
                         Timeout = 9000000
@@ -1437,7 +1506,7 @@ public class ExtractData : ConventionInputCommandOperation
         protected override void Initialize()
         {
             
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
 
                 Timeout = 9000000,
@@ -1484,7 +1553,7 @@ public class ExtractData : ConventionInputCommandOperation
         protected override void Initialize()
         {
             //Cambiado por JL para resolver problema de tiempo de espera al ejecutar el VoucherGenSP          
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
               
                 Timeout = 9000000,
@@ -1520,7 +1589,8 @@ public class ExtractData : ConventionInputCommandOperation
         {
             if ((sistema == "CountryPack") || (sistema == "ERP" && GlobalStrings.ERP != "XA"))
             {
-                Register(new ConventionInputCommandOperation(sistema)
+               
+                Register(new ConventionInputCommandOperation(sistema=="ERP"?ConnectionData.ConexionSettingERP:ConnectionData.ConexionSettingCFDI)
                 {
                     Command = querySelect,
                     Timeout = 9000000,
@@ -1560,12 +1630,12 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {           
-            Register(new ConventionInputCommandOperation(sistema)
+            Register(new ConventionInputCommandOperation(sistema=="ERP" ? ConnectionData.ConexionSettingERP : ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000,
             });
-            Register(new ConventionOutputCommandOperation(sistema)
+            Register(new ConventionOutputCommandOperation(sistema == "ERP" ? ConnectionData.ConexionSettingERP : ConnectionData.ConexionSettingCFDI)
             {
                 Command = queryInsert
             });
@@ -1583,7 +1653,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000,
@@ -1603,7 +1673,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000,
@@ -1621,7 +1691,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("ERP")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
             {
                 Command = (GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + querySelect : querySelect : querySelect,
                
@@ -1646,7 +1716,7 @@ public class ExtractData : ConventionInputCommandOperation
         protected override void Initialize()
         {         
                
-            Register(new ConventionInputCommandOperation("ERP")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingERP)
             {
                 Command = (GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + querySelect : querySelect : querySelect,
                
@@ -1701,7 +1771,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation(NameConnection)
+            Register(new ConventionInputCommandOperation(NameConnection=="ERP"? ConnectionData.ConexionSettingERP: ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 9000000,
@@ -1739,123 +1809,136 @@ public class ExtractData : ConventionInputCommandOperation
         }
         void AddConexionesnew(string NameConnetion, string StringConnection, string ProviderConnection,Configuration config)
         {
+            //Buscar cadena de conexion para desencriptar
+            ////var Cadena = StringConnection.Split(';');
+            ////var Pass = Cadena[3];
+
             //Agrega la cadena de conexion si no existe
             ConnectionStringSettings settings = new ConnectionStringSettings(NameConnetion, StringConnection, ProviderConnection);
-            config.ConnectionStrings.ConnectionStrings.Add(settings);
+
+           
+
+           // config.ConnectionStrings.ConnectionStrings.Add(settings);
+            if(NameConnetion=="ERP")
+                ConnectionData.ConexionSettingERP = settings;
+            else
+               ConnectionData.ConexionSettingCFDI = settings;
         }
         //Metodos para crear la conexión
-        void AddConexiones(string NameConnection, string StringConnection, string ProviderConnection, Configuration config)
-        {
-            //abrimos la configuración de nuestro proyecto
-            config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            config.ConnectionStrings.ConnectionStrings.Add(new ConnectionStringSettings
-            {
-                Name = NameConnection,
-                ConnectionString = StringConnection,
-                ProviderName = ProviderConnection
-            });
-            config.Save(ConfigurationSaveMode.Full);
+        //void AddConexiones(string NameConnection, string StringConnection, string ProviderConnection, Configuration config)
+        //{
+        //    //abrimos la configuración de nuestro proyecto
+        //    config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        //    config.ConnectionStrings.ConnectionStrings.Add(new ConnectionStringSettings
+        //    {
+        //        Name = NameConnection,
+        //        ConnectionString = StringConnection,
+        //        ProviderName = ProviderConnection
+        //    });
+        //    config.Save(ConfigurationSaveMode.Full);
 
-        }
+        //}
         void UpdateConexionERP(Configuration config, string schema)
         {
             string schemas;
-            schemas = "QGPL," + schema;
-            ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
-            if (config != null)
-            {
-                foreach (ConnectionStringSettings cs in settings)
-                {
-                    if (cs.Name == "ERP")
-                    {
-                        ConnectionData.StringConnectionERP = ConnectionData.StringConnectionERP.Replace("QGPL",schemas);
-                        //config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                        //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;
-                        //Cambiamos el modo de guardado
-                        config.Save(ConfigurationSaveMode.Modified, true);
-                    }
-                }
-            }
+            schemas = "QGPL," + schema;        
+            ConnectionData.ConexionSettingERP.ConnectionString = ConnectionData.ConexionSettingERP.ConnectionString.Replace("QGPL", schemas);
+         
+            //ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
+            //if (config != null)
+            //{
+            //    foreach (ConnectionStringSettings cs in settings)
+            //    {
+            //        if (cs.Name == "ERP")
+            //        {
+            //            ConnectionData.StringConnectionERP = ConnectionData.StringConnectionERP.Replace("QGPL",schemas);
+            //            //config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            //            //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
+            //            config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
+            //            config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;
+            //            //Cambiamos el modo de guardado
+            //            config.Save(ConfigurationSaveMode.Modified, true);
+            //        }
+            //    }
+            //}
         }
         void crearconexionesnew()
         {
-            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
-            bool ExistCountryPack = false;
-            bool ExistERP = false;
-            if (config != null)
-            {
-                foreach (ConnectionStringSettings cs in settings)
-                {
-                    if (cs.Name == "CountryPack")
-                    {
-                        ExistCountryPack = true;
-                        //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
-                        config.ConnectionStrings.ConnectionStrings["CountryPack"].ConnectionString = ConnectionData.StringConnection;
-                        config.ConnectionStrings.ConnectionStrings["CountryPack"].ProviderName = ConnectionData.ProviderConnection;
+            //Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            //ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
+            //bool ExistCountryPack = false;
+            //bool ExistERP = false;
+            //if (config != null)
+            //{
+            //    foreach (ConnectionStringSettings cs in settings)
+            //    {
+            //        if (cs.Name == "CountryPack")
+            //        {
+            //            ExistCountryPack = true;
+            //            //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
+            //            config.ConnectionStrings.ConnectionStrings["CountryPack"].ConnectionString = ConnectionData.StringConnection;
+            //            config.ConnectionStrings.ConnectionStrings["CountryPack"].ProviderName = ConnectionData.ProviderConnection;
                        
-                    }
-                    if (cs.Name == "ERP")
-                    {
-                        ExistERP = true;
-                        //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;                     
+            //        }
+            //        if (cs.Name == "ERP")
+            //        {
+            //            ExistERP = true;
+            //            //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
+            //            config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
+            //            config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;                     
                        
-                    }
-                }
-            }
+            //        }
+            //    }
+            //}
             //config.ConnectionStrings.ConnectionStrings.Clear();
-            if (!ExistCountryPack)
-                AddConexionesnew("CountryPack", ConnectionData.StringConnection, ConnectionData.ProviderConnection, config);
-            if (!ExistERP)
-                AddConexionesnew("ERP", ConnectionData.StringConnectionERP, ConnectionData.ProviderConnectionERP, config);
+           // if (!ExistCountryPack)
+                AddConexionesnew("CountryPack", ConnectionData.StringConnection, ConnectionData.ProviderConnection, null);
+           // if (!ExistERP)
+                AddConexionesnew("ERP", ConnectionData.StringConnectionERP, ConnectionData.ProviderConnectionERP, null);
 
-            config.Save(ConfigurationSaveMode.Modified, true);
-            ConfigurationManager.RefreshSection("connectionStrings");
+            //config.Save(ConfigurationSaveMode.Modified, true);
+            //ConfigurationManager.RefreshSection("connectionStrings");
         }
-        void crearconexiones(Configuration config)
-        {
-            bool ExistCountryPack = false;
-            bool ExistERP = false;
-            // string a = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).FilePath;
-            //MessageBox.Show(a);
-            ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
-
-            if (config != null)
-            {
-               foreach (ConnectionStringSettings cs in settings)
-                {
-                    if (cs.Name == "CountryPack")
-                    {
-                        ExistCountryPack = true;
-                        config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                        //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
-                        config.ConnectionStrings.ConnectionStrings["CountryPack"].ConnectionString = ConnectionData.StringConnection;
-                        config.ConnectionStrings.ConnectionStrings["CountryPack"].ProviderName = ConnectionData.ProviderConnection;
-                        //Cambiamos el modo de guardado
-                        config.Save(ConfigurationSaveMode.Modified, true);
-                    }
-                    if (cs.Name == "ERP")
-                    {
-                        ExistERP = true;
-                        config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                        //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
-                        config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;
-                        //Cambiamos el modo de guardado
-                        config.Save(ConfigurationSaveMode.Modified, true);
-                    }
-                }
-            }
-            //config.ConnectionStrings.ConnectionStrings.Clear();
-            if (!ExistCountryPack)
-                AddConexiones("CountryPack", ConnectionData.StringConnection, ConnectionData.ProviderConnection, config);
-            if (!ExistERP)
-                AddConexiones("ERP", ConnectionData.StringConnectionERP, ConnectionData.ProviderConnectionERP, config);
-        }
+        //void crearconexiones(Configuration config)
+        //{
+        //    bool ExistCountryPack = false;
+        //    bool ExistERP = false;
+        //    // string a = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None).FilePath;
+        //    //MessageBox.Show(a);
+        //    ConnectionStringSettingsCollection settings = ConfigurationManager.ConnectionStrings;
+           
+        //    if (config != null)
+        //    {
+        //       foreach (ConnectionStringSettings cs in settings)
+        //        {
+        //            if (cs.Name == "CountryPack")
+        //            {
+        //                ExistCountryPack = true;
+        //                config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        //                //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
+        //                config.ConnectionStrings.ConnectionStrings["CountryPack"].ConnectionString = ConnectionData.StringConnection;
+        //                config.ConnectionStrings.ConnectionStrings["CountryPack"].ProviderName = ConnectionData.ProviderConnection;
+        //                //Cambiamos el modo de guardado
+        //                config.Save(ConfigurationSaveMode.Modified, true);
+        //            }
+        //            if (cs.Name == "ERP")
+        //            {
+        //                ExistERP = true;
+        //                config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        //                //hacemos la modificacion de la cadena de conexion (ServerDb es el atributo que tengo en app.config) 
+        //                config.ConnectionStrings.ConnectionStrings["ERP"].ConnectionString = ConnectionData.StringConnectionERP;
+        //                config.ConnectionStrings.ConnectionStrings["ERP"].ProviderName = ConnectionData.ProviderConnectionERP;
+        //                //Cambiamos el modo de guardado
+        //                config.Save(ConfigurationSaveMode.Modified, true);
+        //            }
+        //        }
+        //    }
+        //    //config.ConnectionStrings.ConnectionStrings.Clear();
+        //    if (!ExistCountryPack)
+        //        AddConexiones("CountryPack", ConnectionData.StringConnection, ConnectionData.ProviderConnection, config);
+        //    if (!ExistERP)
+        //        AddConexiones("ERP", ConnectionData.StringConnectionERP, ConnectionData.ProviderConnectionERP, config);
+        //}
         void GetDataCompany()
         {
 
@@ -1879,9 +1962,9 @@ public class ExtractData : ConventionInputCommandOperation
             if (!string.IsNullOrEmpty(rows))
             {
                 //Cargar xml 
-                XmlSerializer serializer = new XmlSerializer(typeof(List<MXEIPX>), new XmlRootAttribute("ListDocRel"));
+                XmlSerializer serializer = new XmlSerializer(typeof(List<PX>), new XmlRootAttribute("ListDocRel"));
                 StringReader stringReader = new StringReader(rows);
-                List<MXEIPX> docrelated = (List<MXEIPX>)serializer.Deserialize(stringReader);
+                List<PX> docrelated = (List<PX>)serializer.Deserialize(stringReader);
                 //Buscar el site
                
                 foreach (var row in docrelated)
@@ -1928,12 +2011,12 @@ public class ExtractData : ConventionInputCommandOperation
             else
             {
                 if(!GlobalStrings.GetSubTotalXA)
-                InputData = string.Format(GlobalStringsXA.SelectComprobante0, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
-
-                InputData = string.Format(GlobalStringsXA.SelectComprobante, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                InputData = string.Format(GlobalStringsXA.SelectComprobante0, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.metodoPago, GlobalStrings.formaPago);
+                else
+                InputData = string.Format(GlobalStringsXA.SelectComprobante, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.metodoPago, GlobalStrings.formaPago);
             }
 
-            //string OutputData = string.Format(GlobalStrings.InsertVoucher, GlobalStrings.version, GlobalStrings.formaPago, GlobalStrings.lugarExpedicion, GlobalStrings.metodoPago, GlobalStrings.SiteRef);
+         //   string OutputData = string.Format(GlobalStrings.InsertVoucher, GlobalStrings.version, GlobalStrings.formaPago, GlobalStrings.lugarExpedicion, GlobalStrings.metodoPago, GlobalStrings.SiteRef);
 
             ExNihiloNodoComprobante NodoComprobante = new ExNihiloNodoComprobante(InputData, OutputData);
             NodoComprobante.UseTransaction = false;
@@ -1968,14 +2051,62 @@ public class ExtractData : ConventionInputCommandOperation
         }
         void NodoReceptor(string OutputData)
         {
+
+            if (GlobalStrings.ERP != "XA")
+            {
+                Console.WriteLine("ValidarExistenciaColumna USECFDI");
+
+                GlobalStrings.ValidateCol = "0";
+                string InputDataCol = string.Format(GlobalStrings.ValidarExistenciaColumna, "V0USGE", "MXEIHD");
+                ExNihiloValidarExistenciaColumnaSL ExitsColumn = new ExNihiloValidarExistenciaColumnaSL(InputDataCol);
+                ExitsColumn.UseTransaction = false;
+                ExitsColumn.Execute();
+                if (ExitsColumn.GetAllErrors().Count() > 0)
+                {
+                    foreach (Exception ex in ExitsColumn.GetAllErrors())
+                    {
+                        Console.WriteLine(ex.Message);
+                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                        //Rollback();
+                    }
+                }
+                if (GlobalStrings.ValidateCol == "1")
+                {
+                    GlobalStrings.ValidateCol = "0";
+                    //Extraer valor de la columna
+                    var InputDataHD = string.Format(GlobalStrings.SelectComprobanteV0USGE, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                    ExNihiloMXEIHDUSECFDI V0USGEReceptor = new ExNihiloMXEIHDUSECFDI(InputDataHD);
+                    V0USGEReceptor.UseTransaction = false;
+                    V0USGEReceptor.Execute();
+                    if (V0USGEReceptor.GetAllErrors().Count() > 0)
+                    {
+                        foreach (Exception ex in V0USGEReceptor.GetAllErrors())
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                    Console.WriteLine("Finaliza extraccion del uso del cfdi");
+
+                }
+            }
+           
             Console.WriteLine("Inicia extraccion nodo receptor");
             string InputData1 = string.Format(GlobalStrings.SelectReceptorAddressErp, GlobalStrings.rfcReceptor, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             string InputData2 = string.Format(GlobalStrings.SelectReceptorShiptopErp, GlobalStrings.rfcReceptor, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             //string InputData3 = string.Format(GlobalStrings.SelectReceptorCountryPack, GlobalStrings.rfcReceptor);
             //PRUEBA FELIPE
-            string InputData3 = string.Format(GlobalStrings.SelectReceptorCountryPack, GlobalStrings.rfcReceptor,GlobalStrings.cliente);
+            string InputData3 = string.Empty;
+            var useCFDI = ((GlobalStrings.TypeCFDI == "I") ? "ISNULL(cfdiUse,'')" : "ISNULL(cfdiUseEgreso,'')").ToString();
+            if (GlobalStrings.ERP != "XA")
+            {             
+              
+                InputData3 = string.IsNullOrEmpty(GlobalStrings.UseCFDI) ? string.Format(GlobalStrings.SelectReceptorCountryPack, GlobalStrings.rfcReceptor, GlobalStrings.cliente, useCFDI) : string.Format(GlobalStrings.SelectReceptorCountryPackUSE, GlobalStrings.rfcReceptor, GlobalStrings.cliente, GlobalStrings.UseCFDI);
+                
+            }
+            else
+                InputData3 = string.Format(GlobalStrings.SelectReceptorCountryPack, GlobalStrings.rfcReceptor, GlobalStrings.cliente, useCFDI);
+           
             //string OutputData = string.Format(GlobalStrings.InsertReceptor, GlobalStrings.comprobanteId, GlobalStrings.SiteRef);
-
             ExNihiloNodoReceptor NodoReceptor = new ExNihiloNodoReceptor(InputData1, InputData2, InputData3, OutputData);
             NodoReceptor.UseTransaction = false;
             NodoReceptor.Execute();
@@ -2143,7 +2274,20 @@ public class ExtractData : ConventionInputCommandOperation
                 }
             }
         }
-
+        void LimpiaImpuestosMulti(string OutputData)
+        {
+            string InputData = GlobalStrings.InicializaRegistroERP;            
+            ExNihiloGenericExtraction DeleteImpuestos = new ExNihiloGenericExtraction(InputData, OutputData);
+            DeleteImpuestos.UseTransaction = false;
+            DeleteImpuestos.Execute();
+            if (DeleteImpuestos.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in DeleteImpuestos.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
         //Agregado por JL para actualizar los registros de MXEIPY
         void UPDATEMXEIPXY(string OutputData)
         {
@@ -2190,7 +2334,7 @@ public class ExtractData : ConventionInputCommandOperation
             else
                 InputData = string.Format(GlobalStringsXA.SelectCfdiRelacionados, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             //string OutputData = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId);
-
+           
             ExNihiloGenericExtraction Comentarios = new ExNihiloGenericExtraction(InputData, OutputData);
             Comentarios.UseTransaction = false;
             Comentarios.Execute();
@@ -2311,6 +2455,27 @@ public class ExtractData : ConventionInputCommandOperation
                 }
             }
             Console.WriteLine("Finaliza proceso de extracción comentarios");
+        }
+
+        void UpdateVoucherUFS()
+        {
+            Console.WriteLine("Inicia proceso de actualizacion ufs");
+            string InputData = string.Format(GlobalStrings.SelectVoucherUFS, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+            string OutputData = string.Format(GlobalStrings.UpdateVoucherUFS, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+            //---------------------------
+            ExNihiloGenericExtraction UpdateVoucher = new ExNihiloGenericExtraction(InputData, OutputData);
+            UpdateVoucher.UseTransaction = false;
+            UpdateVoucher.Execute();
+            if (UpdateVoucher.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in UpdateVoucher.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            //---------------------------
+           
+            Console.WriteLine("Finaliza proceso de actualizacion ufs");
         }
         //Complementos
         void Detallista()
@@ -3059,7 +3224,7 @@ public class ExtractData : ConventionInputCommandOperation
                         GetDataCompany();
                         Console.WriteLine("Finaliza extraccion datos compañia");
                         if (GlobalStrings.ERP == "XA")
-                            sNodoComprobante = string.Format(GlobalStrings.InsertVoucher, GlobalStrings.version, GlobalStrings.formaPago, GlobalStrings.lugarExpedicion, GlobalStrings.metodoPago, GlobalStrings.SiteRef, GlobalStrings.V0CONO, GlobalStrings.pathCFDI);
+                            sNodoComprobante = string.Format(GlobalStrings.InsertVoucherXA, GlobalStrings.version, GlobalStrings.formaPago, GlobalStrings.lugarExpedicion, GlobalStrings.metodoPago, GlobalStrings.SiteRef, GlobalStrings.V0CONO, GlobalStrings.pathCFDI);
                         else
                         { //Validar columnas
                             if (GlobalStrings.UseMultisite)
@@ -3150,21 +3315,116 @@ public class ExtractData : ConventionInputCommandOperation
                                 //Rollback();
                             }
                         }
-                       
-                        if (GlobalStrings.ValidateCol == "1")
-                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteId,GlobalStrings.Parm_Site);  
-                        else
-                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);
-                        GlobalStrings.ValidateCol = "0";
-                        CfdiRelacionados(sCfdiRelacionados);
+                            if (GlobalStrings.ValidateCol == "1")
+                            {
+                                GlobalStrings.ValidateCol = "0";
+                                ///Validar si existe columna del lado sl
+                                var InputDataColSL = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJIIMP", "MXEIRC");
+                                var ExitsColumnSL = new ExNihiloValidarExistenciaColumnaSL(InputDataColSL);
+                                ExitsColumnSL.UseTransaction = false;
+                                ExitsColumnSL.Execute();
+                                if (ExitsColumnSL.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in ExitsColumnSL.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                        //Rollback();
+                                    }
+                                }
+                                if (GlobalStrings.ValidateCol == "1")
+                                {
+                                    //Validar si existe la columna del lado sl typerelation
+                                    string ColCS = ",AMOUNT";
+                                    string ColSL = ",isnull(@VJIIMP,0)";
+                                    GlobalStrings.ValidateCol = "0";
+                                    var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                    var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                    ExitsColumn2.UseTransaction = false;
+                                    ExitsColumn2.Execute();
+                                    if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                    {
+                                        foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                        {
+                                            Console.WriteLine(ex.Message);
+                                            VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                            //Rollback();
+                                        }
+                                    }
+                                    if (GlobalStrings.ValidateCol == "1")
+                                    {
+                                        ColCS += ",relationType";
+                                        ColSL += ",@VJRELTYPE";
+                                        GlobalStrings.ValidateCol = "0";
+                                    }
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site, ColCS, ColSL);
+                                }
+                                else
+                                {
+                                    string ColCS = string.Empty;
+                                    string ColSL = string.Empty;
+                                    var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                    var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                    ExitsColumn2.UseTransaction = false;
+                                    ExitsColumn2.Execute();
+                                    if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                    {
+                                        foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                        {
+                                            Console.WriteLine(ex.Message);
+                                            VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                            //Rollback();
+                                        }
+                                    }
+                                    if (GlobalStrings.ValidateCol == "1")
+                                    {
+                                        ColCS += ",relationType";
+                                        ColSL += ",@VJRELTYPE";
+                                        GlobalStrings.ValidateCol = "0";
+                                        sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site, ColCS, ColSL);
+                                    }
+                                    else
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);                                   
+                                }                               
+                                CfdiRelacionados(sCfdiRelacionados);
+                            }
+                            else
+                            {
+                                //Validar si existe la columna de tipo de relacion en la intermedia
+                                string ColCS = "";
+                                string ColSL = "";
+                                var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                ExitsColumn2.UseTransaction = false;
+                                ExitsColumn2.Execute();
+                                if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                        //Rollback();
+                                    }
+                                }
+                                if (GlobalStrings.ValidateCol == "1")
+                                {
+                                    ColCS += ",relationType";
+                                    ColSL += ",@VJRELTYPE";
+                                    GlobalStrings.ValidateCol = "0";
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site, ColCS, ColSL);
+                                }
+                                else
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site, "");
+                            }
+                        
+                            CfdiRelacionados(sCfdiRelacionados);
                         }
                         else
                         {
                             sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);
                             CfdiRelacionados(sCfdiRelacionados);
-                        }
-                        //
-
+                        }                                
+                        
                         //Extraccion punto de venta
                         sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
                         POS(sPos); //utilizado para en XA para obbtener Shipto
@@ -3371,29 +3631,134 @@ public class ExtractData : ConventionInputCommandOperation
                         Comentarios();
                         //
                         //Extraccion documentos relacionados
-                        GlobalStrings.ValidateCol = "0";
-                        var InputDataCol1 = string.Format(GlobalStrings.ValidarExistenciaColumna, "amount", "ZMX_CfdiRelated");
-                        var ExitsColumn1 = new ExNihiloValidarExistenciaColumna(InputDataCol1);
-                        ExitsColumn1.UseTransaction = false;
-                        ExitsColumn1.Execute();
-                        if (ExitsColumn1.GetAllErrors().Count() > 0)
+                        if (GlobalStrings.ERP != "XA")
                         {
-                            foreach (Exception ex in ExitsColumn1.GetAllErrors())
+                            GlobalStrings.ValidateCol = "0";
+                            var InputDataCol1 = string.Format(GlobalStrings.ValidarExistenciaColumna, "amount", "ZMX_CfdiRelated");
+                            var ExitsColumn1 = new ExNihiloValidarExistenciaColumna(InputDataCol1);
+                            ExitsColumn1.UseTransaction = false;
+                            ExitsColumn1.Execute();
+                            if (ExitsColumn1.GetAllErrors().Count() > 0)
                             {
-                                Console.WriteLine(ex.Message);
-                                VoucherLog("CountryPack", 5, ex.Message, 0, 10);
-                                //Rollback();
+                                foreach (Exception ex in ExitsColumn1.GetAllErrors())
+                                {
+                                    Console.WriteLine(ex.Message);
+                                    VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                    //Rollback();
+                                }
                             }
+                            if (GlobalStrings.ValidateCol == "1")
+                            {
+                                GlobalStrings.ValidateCol = "0";
+                                ///Validar si existe columna del lado sl
+                                var InputDataColSL = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJIIMP", "MXEIRC");
+                                var ExitsColumnSL = new ExNihiloValidarExistenciaColumnaSL(InputDataColSL);
+                                ExitsColumnSL.UseTransaction = false;
+                                ExitsColumnSL.Execute();                               
+                                if (ExitsColumnSL.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in ExitsColumnSL.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                        //Rollback();
+                                    }
+                                }
+                                if (GlobalStrings.ValidateCol == "1")
+                                {
+                                   
+                                    //Validar si existe la columna del lado sl typerelation
+                                    string ColCS = ",AMOUNT";
+                                    string ColSL = ",isnull(@VJIIMP,0)";
+                                    GlobalStrings.ValidateCol = "0";
+                                    var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                    var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                    ExitsColumn2.UseTransaction = false;
+                                    ExitsColumn2.Execute();
+                                    if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                    {
+                                        foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                        {
+                                            Console.WriteLine(ex.Message);
+                                            VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                            //Rollback();
+                                        }
+                                    }
+                                    if (GlobalStrings.ValidateCol == "1")
+                                    {
+                                        ColCS += ",relationType";
+                                        ColSL += ",@VJRELTYPE";
+                                        GlobalStrings.ValidateCol = "0";                                       
+                                    }
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, ColCS, ColSL);
+                                }
+                                else
+                                {
+                                    string ColCS = string.Empty; 
+                                    string ColSL = string.Empty;
+                                    GlobalStrings.ValidateCol = "0";
+                                    var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                    var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                    ExitsColumn2.UseTransaction = false;
+                                    ExitsColumn2.Execute();
+                                    if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                    {
+                                        foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                        {
+                                            Console.WriteLine(ex.Message);
+                                            VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                            //Rollback();
+                                        }
+                                    }
+                                    if (GlobalStrings.ValidateCol == "1")
+                                    {
+                                        ColCS += ",relationType";
+                                        ColSL += ",@VJRELTYPE";
+                                        GlobalStrings.ValidateCol = "0";
+                                        sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, ColCS, ColSL);
+                                    }
+                                    else                                    
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site);
+                                }                               
+                                CfdiRelacionados(sCfdiRelacionados);
+                            }
+                            else
+                            {
+                                //Validar si existe la columna de tipo de relacion en la intermedia
+                                string ColCS = "";
+                                string ColSL = "";
+                                var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
+                                var ExitsColumn2 = new ExNihiloValidarExistenciaColumnaSL(InputDataCol2);
+                                ExitsColumn2.UseTransaction = false;
+                                ExitsColumn2.Execute();
+                                if (ExitsColumn2.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in ExitsColumn2.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                        VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                        //Rollback();
+                                    }
+                                }
+                                if (GlobalStrings.ValidateCol == "1")
+                                {
+                                    ColCS += ",relationType";
+                                    ColSL += ",@VJRELTYPE";
+                                    GlobalStrings.ValidateCol = "0";
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, ColCS, ColSL);
+                                }
+                                else
+                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, "");
+                            }                           
+                            CfdiRelacionados(sCfdiRelacionados);
                         }
-                        if (GlobalStrings.ValidateCol == "1")
-                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate, GlobalStrings.Parm_Site);
                         else
-                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteIdUpdate, GlobalStrings.Parm_Site);
-                        GlobalStrings.ValidateCol = "0";
-                     
+                        {
+                            sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site);
+                            Console.WriteLine(sCfdiRelacionados);
+                            CfdiRelacionados(sCfdiRelacionados);
+                        }
                         
-                        CfdiRelacionados(sCfdiRelacionados);
-                        //
                         //Extraccion puntos de venta
                         sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteIdUpdate);
                         POS(sPos); //utilizado para en XA para obbtener Shipto
@@ -3516,7 +3881,9 @@ public class ExtractData : ConventionInputCommandOperation
                 //Extraccion comentarios
                 Comentarios();
                 //
-
+                //Actualizar ufs
+                UpdateVoucherUFS();
+                //
                 //Extraccion punto de venta
                 //Agregado por jl para la reimpresion de direcciones
                 sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
@@ -3562,6 +3929,17 @@ public class ExtractData : ConventionInputCommandOperation
                 {
 
                     //Agregado por JL -28102019 para eliminar px y py
+                    if (GlobalStrings.UseMultisite)
+                    {
+                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_mst");
+                        if (ValidateExistTableERP(sValidateTableERPImpueLoc) == "1")
+                        {
+                            var eliminarTaxMulti = string.Format(GlobalStrings.DELETETAXSMULTI, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                            Console.WriteLine("Inicia proceso de eliminacion de los impuestos");
+                            LimpiaImpuestosMulti(eliminarTaxMulti);
+                            Console.WriteLine("Finaliza proceso de eliminacion de los impuestos");
+                        }
+                    }
                     var eliminapy = string.Format(GlobalStrings.DELETEPY, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                     Console.WriteLine("Inicia proceso de eliminacion del encabezado del pago");
                     LimpiaPXPY(eliminapy);
@@ -3599,7 +3977,7 @@ public class ExtractData : ConventionInputCommandOperation
                     GlobalStrings.ParamsPaymentSelect = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentSelect) ? GlobalStrings.ParamsPaymentSelect.Remove(GlobalStrings.ParamsPaymentSelect.Length - 1, 1) : GlobalStrings.ParamsPaymentSelect;
                     InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.ParamsPaymentSelect);
 
-
+                   
 
                     string InputDataCol = string.Format(GlobalStrings.ValidarExistenciaColumna, "VQUUT1", "ZMX_MXEIPY");
                     ExNihiloValidarExistenciaColumna ExitsColumn = new ExNihiloValidarExistenciaColumna(InputDataCol);
@@ -3646,19 +4024,17 @@ public class ExtractData : ConventionInputCommandOperation
                             GlobalStrings.ParamsPaymentInsert = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentInsert) ? GlobalStrings.ParamsPaymentInsert.Remove(GlobalStrings.ParamsPaymentInsert.Length - 1, 1) : GlobalStrings.ParamsPaymentInsert;
                             GlobalStrings.ParamsPaymentUpdate = !string.IsNullOrEmpty(GlobalStrings.ParamsPaymentUpdate) ? GlobalStrings.ParamsPaymentUpdate.Remove(GlobalStrings.ParamsPaymentUpdate.Length - 1, 1) : GlobalStrings.ParamsPaymentUpdate;
                             OutputData = string.Format(GlobalStrings.InsertPaymentsInvoiceWhitCol, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site, GlobalStrings.ValuesPaymentInsert, GlobalStrings.ParamsPaymentInsert, GlobalStrings.ParamsPaymentUpdate);
-                            Console.WriteLine(OutputData);
+                           
                         }
                         else
                         {
-                            OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-                            Console.WriteLine(OutputData);
+                            OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);                            
                         }
                     }
                     else
-                    {
-                        OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-                        Console.WriteLine(OutputData);
-                    }
+                        {
+                            OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);                         
+                        }
                     }
                 else
                 {
@@ -3666,8 +4042,7 @@ public class ExtractData : ConventionInputCommandOperation
                     InputData = string.Format(GlobalStringsXA.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                     // Console.WriteLine(InputData);
                     OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI, GlobalStrings.Parm_Site);
-                    Console.WriteLine(InputData);
-                    Console.WriteLine("Fecha");
+                   
                 }
                 //
 
@@ -3710,13 +4085,43 @@ public class ExtractData : ConventionInputCommandOperation
                     Console.WriteLine("Finaliza registro en voucherLog erp");
                 }
                 //Bug de XA no regresar estados 10 para no recibir registros duplicados.
+              
                 if (GlobalStrings.ERP != "XA")
                 {
+                    
                     string sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosPagos, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                     CfdiRelacionados(sCfdiRelacionados);
-
+                  
+                    //Enviar Tabla de impuestos Multisite
+                    //if (GlobalStrings.UseMultisite)
+                    //{
+                        Console.WriteLine("Inicia llamado a Impuestos MultiSite");
+                        //Validar existencia de tabla de lado SL
+                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_mst");
+                        if (ValidateExistTableERP(sValidateTableERPImpueLoc) == "1")
+                        {
+                            //Si existe la tabla crear proceso para la extraccion
+                            var InputInvoiceTaxes = string.Format(GlobalStrings.SelectTaxesMulti, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                            var OutputInvoiceTaxes = string.Format(GlobalStrings.InsertTaxesMulti, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                            ExNihiloGenericExtraction PaymentsInvoiceTaxes = new ExNihiloGenericExtraction(InputInvoiceTaxes, OutputInvoiceTaxes);
+                       
+                        PaymentsInvoiceTaxes.UseTransaction = false;
+                            PaymentsInvoiceTaxes.Execute();
+                            if (PaymentsInvoiceTaxes.GetAllErrors().Count() > 0)
+                            {
+                                foreach (Exception ex in PaymentsInvoiceTaxes.GetAllErrors())
+                                {
+                                    Console.WriteLine(ex.Message);
+                                    VoucherLog("CountryPack", 5, ex.Message, 0, 10);
+                                    VoucherLog("ERP", 5, ex.Message, 0, 10);
+                                    //Rollback();
+                                }
+                            }
+                        }
+                        Console.WriteLine("Finaliza llamado a Impuestos MultiSite");
+                    //}
                 }
-
+                
                 Console.WriteLine("Inicia llamado a ZMX_VoucherGenSP");
                 string sEXEC_SP = @"Exec ZMX_VoucherGenSP  '" + GlobalStrings.V0SERIE + "',  '" + GlobalStrings.V0FOLIO + "',null ";
                 EXEC_SP(sEXEC_SP);
@@ -3815,8 +4220,18 @@ public class ExtractData : ConventionInputCommandOperation
             //GlobalStrings.SelectrfcEmisorERP = GlobalStringsXA.SelectrfcEmisorERP.Replace("NEWID()", newid.ToString());
             GlobalStrings.SelectrfcEmisorERP = GlobalStringsXA.SelectrfcEmisorERP;
             GlobalStrings.SelectEmisorErp = GlobalStringsXA.SelectEmisorErp;
-            GlobalStrings.SelectReceptorAddressErp = GlobalStringsXA.SelectReceptorAddressErp;
-            GlobalStrings.SelectReceptorShiptopErp = GlobalStringsXA.SelectReceptorShiptopErp;
+
+            if (!GlobalStrings.UseShiptoXA)
+            {
+                GlobalStrings.SelectReceptorAddressErp = GlobalStringsXA.SelectReceptorAddressErp;
+                GlobalStrings.SelectReceptorShiptopErp = GlobalStringsXA.SelectReceptorShiptopErp;
+            }
+            else
+            {
+                GlobalStrings.SelectReceptorAddressErp = GlobalStringsXA.SelectReceptorAddressErpXA;
+                GlobalStrings.SelectReceptorShiptopErp = GlobalStringsXA.SelectReceptorShiptoXAErp;
+            }
+           
 
             //Agregado por JL-29102019 para agregar el subtotal de xa
             if (GlobalStrings.GetSubTotalXA)
@@ -3883,6 +4298,7 @@ public class ExtractData : ConventionInputCommandOperation
             string schema = String.Empty;
             string InputData = string.Format(GlobalStringsXA.SelectGetSchema, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
             ExNihiloGetSchema getSchema = new ExNihiloGetSchema(InputData);
+          
             getSchema.UseTransaction = false;
             getSchema.Execute();
             if (getSchema.GetAllErrors().Count() > 0)
@@ -3893,14 +4309,26 @@ public class ExtractData : ConventionInputCommandOperation
                     return ConnectionData.SchemaDefault;
                 }
             }
-          
+
             //Se obtiene el TimeStamp de la factura
-            if (getSchema.ObjgetSchema.getTimeStamp() != null)
-                GlobalStrings.V9DTTM = getSchema.ObjgetSchema.getTimeStamp();
-            if(getSchema.ObjgetSchema.getSchemaXA() != null)
-                schema =getSchema.ObjgetSchema.getSchemaXA();
+            if (getSchema != null)
+            {
+                if (getSchema.ObjgetSchema != null)
+                {
+                    if (getSchema.ObjgetSchema.getTimeStamp() != null)
+                        GlobalStrings.V9DTTM = getSchema.ObjgetSchema.getTimeStamp();
+                    if (getSchema.ObjgetSchema.getSchemaXA() != null)
+                        schema = getSchema.ObjgetSchema.getSchemaXA();
+                    else
+                        schema = ConnectionData.SchemaDefault;
+                }
+                else
+                    schema = ConnectionData.SchemaDefault;
+            }
             else
-                schema = ConnectionData.SchemaDefault;
+                schema = ConnectionData.SchemaDefault;          
+
+            Console.WriteLine(schema);
             return schema;
         }
         public void PreviousXA(string cono, string serie, string folio)
@@ -3914,7 +4342,7 @@ public class ExtractData : ConventionInputCommandOperation
             schema = GetSchema();
             if (schema.Equals(null)) //Se agrega por error de actualizacion en MXEIRQ
             {
-                Console.WriteLine("Schema NULLL");
+                Console.WriteLine("Schema NULL");
                 schema = ConnectionData.SchemaDefault;
             }
             else
@@ -3983,6 +4411,13 @@ public class ExtractData : ConventionInputCommandOperation
                 GlobalStrings.UseMultisite = Boolean.Parse(xelement.Attribute("UseMultisite").Value);
             else
                 GlobalStrings.UseMultisite = false;
+
+            if (AttributeFound.Where(o => o.Name == "UseShiptoXA").ToList().Count > 0)
+                GlobalStrings.UseShiptoXA = Boolean.Parse(xelement.Attribute("UseShiptoXA").Value);
+            else
+                GlobalStrings.UseShiptoXA = false;
+
+            Console.WriteLine("recuperando use shipto XA");
 
             Console.WriteLine("recuperando config UseMultisite");
 
@@ -4279,10 +4714,10 @@ public class ExtractData : ConventionInputCommandOperation
                     }
                 }
                 if (ExistRFCCliente.ObjgetRFC.getIfExistRFC() != null)
-                {
+                {                  
                     exist = ExistRFCCliente.ObjgetRFC.getIfExistRFC();
                     if (exist == "0")
-                        msg.bShowMsg = true;
+                        msg.bShowMsg = true;                    
                 }
                 else
                     msg.bShowMsg = true;
@@ -4572,7 +5007,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout=9000000
@@ -4614,11 +5049,9 @@ public class ExtractData : ConventionInputCommandOperation
         this.idCliente = clienteId;
         }
         protected override void Initialize()
-        {
-          
-          
-                querySelect = string.Format(ValStrings.validaRfcCustomerPayment, idCliente);
-            Register(new ConventionInputCommandOperation("CountryPack")
+        {          
+            querySelect = string.Format(ValStrings.validaRfcCustomerPayment, idCliente);
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 900000
@@ -4649,7 +5082,7 @@ public class ExtractData : ConventionInputCommandOperation
                 querySelect = string.Format(ValStrings.validaRfcCompany, RFC);
             if (tipoRfc == "Customer")
                 querySelect = string.Format(ValStrings.validaRfcCustomer, RFC, idCliente);
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout=900000
@@ -4676,7 +5109,7 @@ public class ExtractData : ConventionInputCommandOperation
         protected override void Initialize()
         {
           
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
 
                 Command = querySelect,
@@ -4762,7 +5195,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 900000
@@ -4821,7 +5254,7 @@ public class ExtractData : ConventionInputCommandOperation
         }
         protected override void Initialize()
         {
-            Register(new ConventionInputCommandOperation("CountryPack")
+            Register(new ConventionInputCommandOperation(ConnectionData.ConexionSettingCFDI)
             {
                 Command = querySelect,
                 Timeout = 900000
