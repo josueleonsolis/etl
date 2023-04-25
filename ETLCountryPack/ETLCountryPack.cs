@@ -302,8 +302,9 @@ namespace ETLCountryPack
      {
           public LoadDataERP(string query) : base(ConnectionData.ConexionSettingERP)
         {
+          
             Command = query;
-    }
+         }
 
 }
 
@@ -1759,7 +1760,26 @@ public class ExtractData : ConventionInputCommandOperation
         }
 
     }
-   
+
+
+    public class ExNihiloGenericExtractionERP2 : EtlProcess
+    {
+        private string querySelect;
+        private string queryInsert;
+        public ExNihiloGenericExtractionERP2(string InputData, string OutputData)
+        {
+            this.querySelect = InputData;
+            this.queryInsert = OutputData;
+        }
+        protected override void Initialize()
+        {
+
+            Register(new ExtractData(querySelect));
+            Register(new LoadDataERP((GlobalStrings.ERP != "XA") ? (GlobalStrings.UseMultisite) ? string.Format(GlobalStrings.SetSite, GlobalStrings.V0CONO) + ' ' + queryInsert : queryInsert : queryInsert));
+        }
+
+    }
+
     public class ExNihiloTestConnection : EtlProcess
     {
         private string querySelect;
@@ -1981,7 +2001,49 @@ public class ExtractData : ConventionInputCommandOperation
             //
         }
         //
+        public void ProcessTaxses(string registro)
+        {
 
+
+            if (!string.IsNullOrEmpty(registro))
+            {
+                //Cargar xml 
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Taxs>), new XmlRootAttribute("ListDocTax"));
+                StringReader stringReader = new StringReader(registro);
+                List<Taxs> docrelated = (List<Taxs>)serializer.Deserialize(stringReader);
+                //Buscar el site              
+                foreach (var row in docrelated)
+                {
+                    //Console.WriteLine(row.UUID);
+                    //Armar cadena para realizar la actualizacion de la informacion
+                    var stringInsertTaxMultiSL = string.Format(GlobalStrings.InsertTaxesMultiSL, row.SiteRef, row.Base, row.Tax, row.TypeFactor, row.TasaOquote, row.Total, row.TaxConceptMultisiteID, row.UUID_DocRelated, row.Type_Tax, (string.IsNullOrEmpty(row.UFT1) ? "NULL" : row.UFT1), (string.IsNullOrEmpty(row.UFD1) ? "NULL" : row.UFD1) , (string.IsNullOrEmpty(row.UFAMT1) ? "NULL" : row.UFAMT1), row.Serie, row.Folio, row.TotalInvoice, row.CurrencyInvoice);                  
+                    InsertTaxMultiSL(stringInsertTaxMultiSL);
+                }
+            }
+           
+        }
+
+        public void ProcessDocumentoCFDIDocRelated(string registro)
+        {
+
+
+            if (!string.IsNullOrEmpty(registro))
+            {
+                //Cargar xml 
+                XmlSerializer serializer = new XmlSerializer(typeof(List<CFDIDocRelated>), new XmlRootAttribute("ListDocRelated"));
+                StringReader stringReader = new StringReader(registro);
+                List<CFDIDocRelated> docrelated = (List<CFDIDocRelated>)serializer.Deserialize(stringReader);
+                //Buscar el site              
+                foreach (var row in docrelated)
+                {
+                    //Console.WriteLine(row.UUID);
+                    //Armar cadena para realizar la actualizacion de la informacion
+                    var stringInsertTaxMultiSL = string.Format(GlobalStrings.InsertDocumentDocRelated, row.VJCONO, row.VJFOLIO, row.VJSERIE, row.VJSEQN, row.VJISERIE, row.VJIFOLIO, row.VJRELTYPE);
+                    InsertDocumentCFDIDocRelated(stringInsertTaxMultiSL);
+                }
+            }
+
+        }
         void GetSite()
         {
 
@@ -2304,7 +2366,38 @@ public class ExtractData : ConventionInputCommandOperation
                 }
             }
         }
+        //Agregado por JL para insertar impuestos
+        void InsertTaxMultiSL(string OutputData)
+        {
 
+            string InputData = GlobalStrings.InicializaRegistroERP;
+            ExNihiloGenericExtractionERP2 InsertMultiTaxSL = new ExNihiloGenericExtractionERP2(InputData, OutputData);
+            InsertMultiTaxSL.UseTransaction = false;
+            InsertMultiTaxSL.Execute();
+            if (InsertMultiTaxSL.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in InsertMultiTaxSL.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        void InsertDocumentCFDIDocRelated(string OutputData)
+        {
+
+            string InputData = GlobalStrings.InicializaRegistroERP;
+            ExNihiloGenericExtractionERP2 InsertDocCfdiRelated = new ExNihiloGenericExtractionERP2(InputData, OutputData);
+            InsertDocCfdiRelated.UseTransaction = false;
+            InsertDocCfdiRelated.Execute();
+            if (InsertDocCfdiRelated.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in InsertDocCfdiRelated.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
         void NodoImpuestos(List<Conceptos> Impuestos)
         {
 
@@ -2369,11 +2462,14 @@ public class ExtractData : ConventionInputCommandOperation
                 sVerificaPOS = "1";//VerificaPOS.ObjgetExists.getIfExistsRegistros();
             if (sVerificaPOS == "1")
             {
-               
-               
-                string InputData2 = string.Format(GlobalStrings.SelectPOS, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+
+                string InputData2 = string.Empty;
+                if (GlobalStrings.ERP != "XA")                
+                    InputData2 = string.Format(GlobalStrings.SelectPOS, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                else
+                    InputData2 = string.Format(GlobalStrings.SelectPOSXA, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                 // string OutputData = string.Format(GlobalStrings.InsertAddenda, GlobalStrings.comprobanteId, GlobalStrings.SiteRef);
-               
+              
                 ExNihiloGenericExtraction WritePos = new ExNihiloGenericExtraction(InputData2, OutputData);
                 WritePos.UseTransaction = false;
                 WritePos.Execute();
@@ -2999,6 +3095,29 @@ public class ExtractData : ConventionInputCommandOperation
             }
         }
 
+
+        public void UpdateMXEIHDCUSTOM(string Sistema, int StatusId, string Message, int Initial, int End, string DateCancel,string TotalIva, string TotalIvaRetenido, string TotalIsrRetenido)
+        {
+            string[] list = Message.Split('#');
+
+            if (list.Length > 1)
+            {
+
+                var OutputDataUpdate = String.Format(GlobalStrings.UpdateVoucherMXEIHDSLFIELDCUSTOM, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, list[0].ToString(), Initial, End, StatusId, list[1].ToString(), list[2].ToString(), list[3].ToString(), list[4].ToString(), DateCancel, TotalIva, TotalIvaRetenido, TotalIsrRetenido);
+                ExNihiloSetSite exi = new ExNihiloSetSite(OutputDataUpdate);
+                Console.WriteLine(OutputDataUpdate);
+                exi.UseTransaction = false;
+                exi.Execute();
+                if (exi.GetAllErrors().Count() > 0)
+                {
+                    foreach (Exception ex in exi.GetAllErrors())
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+            }
+        }
+
         public void UpdateMXEIRQ(string Sistema, int StatusId, string Message, int Initial, int End,string CFDIRel)
         {
             string[] list = Message.Split('#');
@@ -3050,7 +3169,9 @@ public class ExtractData : ConventionInputCommandOperation
                         //Actualizar en HD
                         //Se aplica la validacion de la configuracion
                         if (GlobalStrings.Config=="1")
-                        {                            
+                        {
+
+                            Console.WriteLine("Antes del update");                      
                         InputData = String.Format(GlobalStrings.ValidaVoucherMXEIRQ, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                         OutputDataUpdate = String.Format(GlobalStrings.UpdateVoucherMXEIHD, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, list[0].ToString(), Initial, End, StatusId, list[1].ToString(), list[2].ToString(), list[3].ToString(), list[4].ToString(), GlobalStrings.SiteERP);
                         OutputDataRQ = String.Format(GlobalStrings.UpdateVoucherMXEIRQUUID, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, list[0].ToString(), Initial, End, StatusId, list[1].ToString(), list[2].ToString(), list[3].ToString(), list[4].ToString(), GlobalStrings.SiteERP);
@@ -3423,12 +3544,23 @@ public class ExtractData : ConventionInputCommandOperation
                         {
                             sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteId, GlobalStrings.Parm_Site);
                             CfdiRelacionados(sCfdiRelacionados);
-                        }                                
-                        
+                        }
+
                         //Extraccion punto de venta
-                        sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
-                        POS(sPos); //utilizado para en XA para obbtener Shipto
+                        //sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
+                        //POS(sPos); //utilizado para en XA para obbtener Shipto
                         //
+
+                        if (GlobalStrings.ERP != "XA")
+                        {
+                            sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
+                            POS(sPos); //utilizado para en XA para obbtener Shipto
+                        }
+                        else
+                        {
+                            sPos = string.Format(GlobalStrings.InsertPOSXA, GlobalStrings.comprobanteId);
+                            POS(sPos); //utilizado para en XA para obbtener Shipto
+                        }
                         if (GlobalStrings.ERP != "XA")
                         {
                             //Agregado por JL - 24102019 para validar la existencia de las tablas
@@ -3604,30 +3736,30 @@ public class ExtractData : ConventionInputCommandOperation
                         NodoReceptor(sNodoReceptor);
                         //
 
-                       
+
                         //Eliminar conceptos antes de actualizar                        
                         string deleteconcept = string.Format(GlobalStrings.DeleteConceptos, GlobalStrings.comprobanteIdUpdate);
                         LimpiaNodoConcepto(deleteconcept);
-                       //
+                        //
                         //Extraccion conceptos
                         sNodoConceptosInput = string.Format(GlobalStrings.SelectNodoConcepto, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                         sNodoConceptosOutput = string.Format(GlobalStrings.InsertNodoConcepto, GlobalStrings.comprobanteIdUpdate, GlobalStrings.SiteRef);
                         listConceptos = NodoConceptos(sNodoConceptosInput, sNodoConceptosOutput);
                         //
-                       
+
                         //Extraccion nodo impuestos
                         NodoImpuestos(listConceptos);
                         //
 
                         //Extraccion pedimentos
                         //if (GlobalStrings.ERP != "XA")
-                            PedimentosConceptos(listConceptos);
+                        PedimentosConceptos(listConceptos);
                         //
                         //Extraccion addendas
                         sNodoAddendas = string.Format(GlobalStrings.InsertAddenda, GlobalStrings.comprobanteIdUpdate, GlobalStrings.SiteRef);
                         NodoAddendas(sNodoAddendas);
-                       //
-                       //Extraccion comentarios
+                        //
+                        //Extraccion comentarios
                         Comentarios();
                         //
                         //Extraccion documentos relacionados
@@ -3654,7 +3786,7 @@ public class ExtractData : ConventionInputCommandOperation
                                 var InputDataColSL = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJIIMP", "MXEIRC");
                                 var ExitsColumnSL = new ExNihiloValidarExistenciaColumnaSL(InputDataColSL);
                                 ExitsColumnSL.UseTransaction = false;
-                                ExitsColumnSL.Execute();                               
+                                ExitsColumnSL.Execute();
                                 if (ExitsColumnSL.GetAllErrors().Count() > 0)
                                 {
                                     foreach (Exception ex in ExitsColumnSL.GetAllErrors())
@@ -3666,7 +3798,7 @@ public class ExtractData : ConventionInputCommandOperation
                                 }
                                 if (GlobalStrings.ValidateCol == "1")
                                 {
-                                   
+
                                     //Validar si existe la columna del lado sl typerelation
                                     string ColCS = ",AMOUNT";
                                     string ColSL = ",isnull(@VJIIMP,0)";
@@ -3688,13 +3820,13 @@ public class ExtractData : ConventionInputCommandOperation
                                     {
                                         ColCS += ",relationType";
                                         ColSL += ",@VJRELTYPE";
-                                        GlobalStrings.ValidateCol = "0";                                       
+                                        GlobalStrings.ValidateCol = "0";
                                     }
                                     sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, ColCS, ColSL);
                                 }
                                 else
                                 {
-                                    string ColCS = string.Empty; 
+                                    string ColCS = string.Empty;
                                     string ColSL = string.Empty;
                                     GlobalStrings.ValidateCol = "0";
                                     var InputDataCol2 = string.Format(GlobalStrings.ValidarExistenciaColumna, "VJRELTYPE", "MXEIRC");
@@ -3717,9 +3849,9 @@ public class ExtractData : ConventionInputCommandOperation
                                         GlobalStrings.ValidateCol = "0";
                                         sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, ColCS, ColSL);
                                     }
-                                    else                                    
-                                    sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site);
-                                }                               
+                                    else
+                                        sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionados, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site);
+                                }
                                 CfdiRelacionados(sCfdiRelacionados);
                             }
                             else
@@ -3749,7 +3881,7 @@ public class ExtractData : ConventionInputCommandOperation
                                 }
                                 else
                                     sCfdiRelacionados = string.Format(GlobalStrings.InsertCfdiRelacionadosAmount, GlobalStrings.comprobanteIdUpdate.ToString().ToUpper(), GlobalStrings.Parm_Site, "");
-                            }                           
+                            }
                             CfdiRelacionados(sCfdiRelacionados);
                         }
                         else
@@ -3758,10 +3890,18 @@ public class ExtractData : ConventionInputCommandOperation
                             Console.WriteLine(sCfdiRelacionados);
                             CfdiRelacionados(sCfdiRelacionados);
                         }
-                        
+
                         //Extraccion puntos de venta
+                        if (GlobalStrings.ERP != "XA")
+                        { 
                         sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteIdUpdate);
                         POS(sPos); //utilizado para en XA para obbtener Shipto
+                         }
+                        else
+                        {
+                            sPos = string.Format(GlobalStrings.InsertPOSXA, GlobalStrings.comprobanteIdUpdate);
+                            POS(sPos); //utilizado para en XA para obbtener Shipto
+                        }
                        //
                         if (GlobalStrings.ERP != "XA")
                         {
@@ -3886,8 +4026,19 @@ public class ExtractData : ConventionInputCommandOperation
                 //
                 //Extraccion punto de venta
                 //Agregado por jl para la reimpresion de direcciones
-                sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
-                POS(sPos); //utilizado para en XA para obbtener Shipto
+
+                if (GlobalStrings.ERP != "XA")
+                {
+                    sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
+                    POS(sPos); //utilizado para en XA para obbtener Shipto
+                }
+                else
+                {
+                    sPos = string.Format(GlobalStrings.InsertPOSXA, GlobalStrings.comprobanteId);
+                    POS(sPos); //utilizado para en XA para obbtener Shipto
+                }
+               // sPos = string.Format(GlobalStrings.InsertPOS, GlobalStrings.comprobanteId);
+                //POS(sPos); //utilizado para en XA para obbtener Shipto
                 //               
                
                 if (GlobalStrings.intRollback == 1)
@@ -3931,7 +4082,7 @@ public class ExtractData : ConventionInputCommandOperation
                     //Agregado por JL -28102019 para eliminar px y py
                     if (GlobalStrings.UseMultisite)
                     {
-                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_mst");
+                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_All");
                         if (ValidateExistTableERP(sValidateTableERPImpueLoc) == "1")
                         {
                             var eliminarTaxMulti = string.Format(GlobalStrings.DELETETAXSMULTI, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
@@ -4097,9 +4248,10 @@ public class ExtractData : ConventionInputCommandOperation
                     //{
                         Console.WriteLine("Inicia llamado a Impuestos MultiSite");
                         //Validar existencia de tabla de lado SL
-                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_mst");
+                        var sValidateTableERPImpueLoc = string.Format(GlobalStrings.ValidateExistTable, "ZMX_TaxConcept_Multi_All");
                         if (ValidateExistTableERP(sValidateTableERPImpueLoc) == "1")
                         {
+                        Console.WriteLine("iNSERT");
                             //Si existe la tabla crear proceso para la extraccion
                             var InputInvoiceTaxes = string.Format(GlobalStrings.SelectTaxesMulti, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                             var OutputInvoiceTaxes = string.Format(GlobalStrings.InsertTaxesMulti, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
@@ -4379,53 +4531,91 @@ public class ExtractData : ConventionInputCommandOperation
                     }
 
                 }
+                //Agregado por jl para la configuracion de si guarda en hd cuando no hay en rq, JL -29102019 - cambio para leer si el subtotal se toma en xa o se guarda com 0
+                XElement xelement = XElement.Load(path + "\\path_config.xml");
+
+                var AttributeFound = xelement.Attributes().Select(x => x).ToList();
+                if (AttributeFound.Where(o => o.Name == "directhd").ToList().Count > 0)
+                    GlobalStrings.Config = xelement.Attribute("directhd").Value;
+                else
+                    GlobalStrings.Config = "0";
+
+                Console.WriteLine("recuperando config hd");
+
+
+                if (AttributeFound.Where(o => o.Name == "getSubtotal").ToList().Count > 0)
+                    GlobalStrings.GetSubTotalXA = Boolean.Parse(xelement.Attribute("getSubtotal").Value);
+                else
+                    GlobalStrings.GetSubTotalXA = false;
+
+                Console.WriteLine("recuperando config subtotal");
+
+
+                if (AttributeFound.Where(o => o.Name == "UseConfigDecimals").ToList().Count > 0)
+                    GlobalStrings.UseConfigDecimals = Boolean.Parse(xelement.Attribute("UseConfigDecimals").Value);
+                else
+                    GlobalStrings.UseConfigDecimals = false;
+                Console.WriteLine("recuperando config UseConfigDecimals");
+                //Configuracion multisite
+
+                if (AttributeFound.Where(o => o.Name == "UseMultisite").ToList().Count > 0)
+                    GlobalStrings.UseMultisite = Boolean.Parse(xelement.Attribute("UseMultisite").Value);
+                else
+                    GlobalStrings.UseMultisite = false;
+
+                Console.WriteLine("recuperando config UseMultisite");
+
+                if (AttributeFound.Where(o => o.Name == "UseShiptoXA").ToList().Count > 0)
+                    GlobalStrings.UseShiptoXA = Boolean.Parse(xelement.Attribute("UseShiptoXA").Value);
+                else
+                    GlobalStrings.UseShiptoXA = false;
+
+                Console.WriteLine("recuperando use shipto XA");
+
+                if (AttributeFound.Where(o => o.Name == "SyncTableTaxSL").ToList().Count > 0)
+                    GlobalStrings.SyncTableTaxSL = Boolean.Parse(xelement.Attribute("SyncTableTaxSL").Value);
+                else
+                    GlobalStrings.SyncTableTaxSL = false;
+
+                Console.WriteLine("recuperando use SyncTableTaxSL");
+
+                if (AttributeFound.Where(o => o.Name == "DocumentCFDIRelated").ToList().Count > 0)
+                    GlobalStrings.DocumentCFDIRelated = Boolean.Parse(xelement.Attribute("DocumentCFDIRelated").Value);
+                else
+                    GlobalStrings.DocumentCFDIRelated = false;
+
+                Console.WriteLine("recuperando DocumentCFDIRelated");
+
+                if (AttributeFound.Where(o => o.Name == "UpdateAditionalDataHD").ToList().Count > 0)
+                    GlobalStrings.UpdateAditionalDataHD = Boolean.Parse(xelement.Attribute("UpdateAditionalDataHD").Value);
+                else
+                    GlobalStrings.UpdateAditionalDataHD = false;
+
+                Console.WriteLine("recuperando UpdateAditionalDataHD");
+
             }
-            //Agregado por jl para la configuracion de si guarda en hd cuando no hay en rq, JL -29102019 - cambio para leer si el subtotal se toma en xa o se guarda com 0
-            XElement xelement = XElement.Load(path + "\\path_config.xml");
-
-            var AttributeFound = xelement.Attributes().Select(x => x).ToList();
-            if (AttributeFound.Where(o => o.Name == "directhd").ToList().Count > 0)
-                GlobalStrings.Config = xelement.Attribute("directhd").Value;
-            else
+           else
+            {
+                Console.WriteLine("Inicia proceso de recuperacion configuraciones default");
                 GlobalStrings.Config = "0";
-
-            Console.WriteLine("recuperando config hd");
-
-
-            if (AttributeFound.Where(o => o.Name == "getSubtotal").ToList().Count > 0)
-                GlobalStrings.GetSubTotalXA = Boolean.Parse(xelement.Attribute("getSubtotal").Value);
-            else
                 GlobalStrings.GetSubTotalXA = false;
-           
-           Console.WriteLine("recuperando config subtotal");
-
-
-            if (AttributeFound.Where(o => o.Name == "UseConfigDecimals").ToList().Count > 0)
-                GlobalStrings.UseConfigDecimals = Boolean.Parse(xelement.Attribute("UseConfigDecimals").Value);
-            else
                 GlobalStrings.UseConfigDecimals = false;
-          Console.WriteLine("recuperando config UseConfigDecimals");
-            //Configuracion multisite
-
-            if (AttributeFound.Where(o => o.Name == "UseMultisite").ToList().Count > 0)
-                GlobalStrings.UseMultisite = Boolean.Parse(xelement.Attribute("UseMultisite").Value);
-            else
                 GlobalStrings.UseMultisite = false;
-
-            if (AttributeFound.Where(o => o.Name == "UseShiptoXA").ToList().Count > 0)
-                GlobalStrings.UseShiptoXA = Boolean.Parse(xelement.Attribute("UseShiptoXA").Value);
-            else
                 GlobalStrings.UseShiptoXA = false;
+                GlobalStrings.SyncTableTaxSL = false;
+                GlobalStrings.DocumentCFDIRelated = false;
+                GlobalStrings.UpdateAditionalDataHD = false;
+                Console.WriteLine("Fin proceso recuperacion configuraciones default");
+            }
 
-            Console.WriteLine("recuperando use shipto XA");
 
-            Console.WriteLine("recuperando config UseMultisite");
+
 
             Console.WriteLine("Finaliza recuperacion de configuraciones del app.config");
 
             //
 
-
+            
             return query;
         }
 

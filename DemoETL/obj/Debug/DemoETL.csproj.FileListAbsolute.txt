@@ -128,8 +128,6 @@ C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtr
 C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
 C:\Users\jleon\Desktop\Cosas Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe.config
-C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
-C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.exe
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\DemoETL.pdb
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.dll
@@ -141,4 +139,6 @@ C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtrac
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\ETLCountryPack.pdb
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Rhino.Etl.Core.xml
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\bin\Debug\Message.pdb
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.exe
+C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.pdb
 C:\Users\jleon\Desktop\Res Josue\Proyectos Cimatic\Codigo ETL\V21\ZMX_DataExtraction_XA\DemoETL\obj\Debug\DemoETL.csprojResolveAssemblyReference.cache

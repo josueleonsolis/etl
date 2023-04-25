@@ -24,7 +24,7 @@ namespace DemoETL
 
             string providerSQL = @"System.Data.SqlClient.SqlConnection, System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
             string providerXA = @"IBM.Data.DB2.iSeries.iDB2Connection, IBM.Data.DB2.iSeries, Version = 12.0.0.0, Culture = neutral, PublicKeyToken = 9cdb2ebfb1f93a26";
-            string Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10, Parameter11, Parameter12, Parameter13;
+            string Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10, Parameter11, Parameter12, Parameter13, Parameter14, Parameter15, Parameter16, Parameter17, Parameter18;
             //=================================================================
             //Parameter1 = Acción a ejecutar(Extraction|Message)
             //Parameter2 = StringConnectionERP
@@ -42,7 +42,7 @@ namespace DemoETL
 
             //{0}=Cono,{1}=Serie,{2}=Folio,{3}=Message,{4}=INLS,{5}=ENDS,{6}=STS
             //=================================================================
-         
+
             Parameter1 = Convert.ToString(args[0]);
             Parameter2 = Convert.ToString(args[1]);
             Parameter3 = Convert.ToString(args[2]);
@@ -57,8 +57,30 @@ namespace DemoETL
             Parameter11 = Convert.ToString(args[10]);//UUID Relacionado Sustitucion
             Parameter12 = Convert.ToString(args[11]);     //XML uuid pagos relacionados 
             Parameter13 = Convert.ToString(args[12]);     //Fecha cancelacion
-            
-
+            Parameter14 = Convert.ToString(args[13]);//xml taxes
+            if (args.Length > 13)
+            {
+                Parameter15 = Convert.ToString(args[14]);//xml documentos relacionados
+                if (args.Length > 14)
+                {
+                    Parameter16 = Convert.ToString(args[15]);//Total iva
+                    Parameter17 = Convert.ToString(args[16]);//total iva retenido
+                    Parameter18 = Convert.ToString(args[17]);//total isr retenido
+                }
+                else
+                {
+                    Parameter16 = string.Empty;
+                    Parameter17 = string.Empty;
+                    Parameter18 = string.Empty;
+                }
+            }
+            else
+            {
+                Parameter15 = string.Empty;
+                Parameter16 = string.Empty;
+                Parameter17 = string.Empty;
+                Parameter18 = string.Empty;
+            }
             //Agregado para manejar los XML
             if (Parameter11 == "SQL")
             {
@@ -173,14 +195,14 @@ namespace DemoETL
                 Console.WriteLine(Parameter10);
                 if (substringsERP[5].ToString().ToUpper() == "XA")
                 {
-                  
+                    ETL j = new ETL();
                     GlobalStrings.ERP = substringsERP[5].ToString().ToUpper();
                     objEtl.PreviousXA(Parameter4, Parameter5, Parameter6); Console.WriteLine("PreviousXA");
                     if (int.Parse(Parameter7) <= 10) //Bug de XA no regresar estados 10 para no recibir registros duplicados.
                     {
                         Parameter7 = "20";
                     }
-                    ETL j = new ETL();
+                 
                     j.getpathCFDI(Parameter5);
                     objEtl.VoucherLog("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10)); Console.WriteLine("VoucherLog");
                 }
@@ -193,35 +215,58 @@ namespace DemoETL
                     {
                         Console.WriteLine("xml:"+Parameter13);
                         Console.WriteLine("Proceso de actualizacion documentos relacionados");
-                        string xml = Parameter13.Replace("$L", "<");
-                        var xml2 = xml.Replace("$G", ">");
+                        //string xml = Parameter13.Replace("$L", "<");
+                        //var xml2 = xml.Replace("$G", ">");
+                        byte[] myBase64ret = Convert.FromBase64String(XML);
+                        string xml2 = System.Text.Encoding.UTF8.GetString(myBase64ret);
                         Console.WriteLine("ARMAR XML");
                         objEtl.UpdateDocRelated(xml2, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.V0CONO);
                         Console.WriteLine("Fin proceso de actualizacion documentos relacionados");
                     }
-                    //Actualiza RQ
-                    //Console.WriteLine("UpdateRQ");
-                    //Console.WriteLine("Parameter1" + Parameter1);
-                    //Console.WriteLine("Parameter2" + Parameter2);
-                    //Console.WriteLine("Parameter3" + Parameter3);
-                    //Console.WriteLine("Parameter4" + Parameter4);
-                    //Console.WriteLine("Parameter5" + Parameter5);
-                    //Console.WriteLine("Parameter6" + Parameter6);
-                    //Console.WriteLine("Parameter7"+ Parameter7);
-                    //Console.WriteLine("Parameter8" + Parameter8);
-                    //Console.WriteLine("Parameter9" + Parameter9);
-                    //Console.WriteLine("Parameter10" + Parameter10);
-                    //Console.WriteLine("Parameter11" + Parameter11);
-                    //Console.WriteLine("Parameter12" + Parameter12);
-                    //Console.WriteLine("Parameter13" + Parameter13);
-                    //Console.WriteLine("msg" + msg);              
+
+                    if (GlobalStrings.SyncTableTaxSL)
+                    {
+                        //Seccion de informacion de impuestos para sincronizar a sl
+                        var XMLImpuestosBase64 = Parameter14.Trim().Length == 1 ? Parameter14.Replace("-", "") : Parameter14;
+                        if (!string.IsNullOrEmpty(XMLImpuestosBase64))
+                        {
+                            Console.WriteLine("Proceso de registro de impuestos");
+                            //Convertir texto base 64 a string
+                            byte[] myBase64ret = Convert.FromBase64String(XMLImpuestosBase64);
+                            string xmlImpuestos = System.Text.Encoding.UTF8.GetString(myBase64ret);
+                            objEtl.ProcessTaxses(xmlImpuestos);
+                            Console.WriteLine("Fin Proceso de registro de impuestos");
+                        }
+                    }
+                    if (GlobalStrings.DocumentCFDIRelated)
+                    {
+                        var XMLImpuestosBase64 = Parameter15.Trim().Length == 1 ? Parameter15.Replace("-", "") : Parameter15;
+                        if (!string.IsNullOrEmpty(XMLImpuestosBase64))
+                        {
+                            Console.WriteLine("Proceso de registro de documentos relacionados a facturas");
+                            //Convertir texto base 64 a string
+                            byte[] myBase64ret = Convert.FromBase64String(XMLImpuestosBase64);
+                            string xmlImpuestos = System.Text.Encoding.UTF8.GetString(myBase64ret);
+                            objEtl.ProcessDocumentoCFDIDocRelated(xmlImpuestos);
+                            Console.WriteLine("Fin Proceso de documentos relacionados a facturas");
+                        }
+                    }
+
+
+
                     Console.WriteLine("GlobalStrings.V9CFDIREL" + GlobalStrings.V9CFDIREL);
                     objEtl.UpdateMXEIRQ("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10), GlobalStrings.V9CFDIREL);
                     //Actualizar HD
                     Console.WriteLine("UpdateHD");
                     var Fecha = Parameter12.Trim().Length == 1 ? Parameter12.Replace("-", "") : Parameter12;
-                    objEtl.UpdateMXEIHD("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10), Fecha);
-                    
+
+
+                    if (!GlobalStrings.UpdateAditionalDataHD)
+                        objEtl.UpdateMXEIHD("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10), Fecha);
+                    else
+                        objEtl.UpdateMXEIHDCUSTOM("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10), Fecha, Parameter16, Parameter17, Parameter18);
+
+
                     // objEtl.VoucherLog("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10)); Console.WriteLine("VoucherLog");
                 }
                 Console.WriteLine("Message FIN---------------------");

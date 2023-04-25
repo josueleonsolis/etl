@@ -14,7 +14,9 @@ namespace Message
         //Modificado por jl para la insercion en hd cuando no haya registros en rq para xa
         public Message(string input, string OutputRQ, string OutputHD)
         {
-            string conStr = ConnectionData.StringConnectionERP;
+            
+            string conStr = ConnectionData.StringConnectionERP.Replace("QGPL", "QGPL,"+ ConnectionData.SchemaDefault);
+            Console.WriteLine(conStr);
             //"DataSource=192.168.17.168; Initial Catalog=S2150caw; UserID=MXAPLUS; Password=WN7R3K; Naming=System; LibraryList=QGPL;";
             try
             {
@@ -23,7 +25,8 @@ namespace Message
                 //"UPDATE MXEIRQ SET  V9ERRD = 'Error Gaspar 1218' WHERE V9CONO = '01' AND V9SERIE = 'A' AND V9FOLIO = '000196' ";
 
                 //Modificado por jl para la insercion en hd cuando no haya registros en rq para xa
-                string myExecuteQuery = input;              
+                string myExecuteQuery = input;
+                Console.WriteLine(input);
                 iDB2Command myCommand = new iDB2Command(myExecuteQuery, myConnection);
                 myCommand.CommandTimeout = 9000000;
                 myCommand.Connection.Open();
@@ -34,12 +37,14 @@ namespace Message
                     if (registros == 1)
                     {
                         Console.WriteLine("Actualizando UUID en RQ -Message");
-                        myExecuteQuery = OutputRQ;
+                        Console.WriteLine(OutputRQ);
+                       myExecuteQuery = OutputRQ;
 
                     }
                     else
                     {
                         Console.WriteLine("Actualizando UUID en HD -Message");
+                        Console.WriteLine(OutputHD);
                         myExecuteQuery = OutputHD;
 
                     }
@@ -47,7 +52,8 @@ namespace Message
                 else
                 {                  
                         Console.WriteLine("Actualizando UUID en HD -Message");
-                        myExecuteQuery = OutputHD;                   
+                    Console.WriteLine(OutputHD);
+                    myExecuteQuery = OutputHD;                   
                 }
 
                     myCommand = new iDB2Command(myExecuteQuery, myConnection);

@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="ETLCountryPack.cs" />
     <Compile Include="GlobalStrings.cs" />
+    <Compile Include="Taxs.cs" />
     <Compile Include="MXEIPX.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

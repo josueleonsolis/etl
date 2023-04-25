@@ -97,8 +97,13 @@ namespace ETLCountryPack
         public static bool UseMultisite { get; set; } = false;
         //Agregado por JL -25032022 para el manejo de la configuracion UseShiptoXA  
         public static bool UseShiptoXA { get; set; } = false;
+        //Agregado por JL -16122022 para el manejo de la configuracion Sincronizacion tabla impuestos SL  
+        public static bool SyncTableTaxSL { get; set; } = false;
+
+        public static bool DocumentCFDIRelated { get; set; } = false;
         //
-       //Agregado por JL para almacenar el tipo de documento
+        public static bool UpdateAditionalDataHD { get; set; } = false;
+        //Agregado por JL para almacenar el tipo de documento
         public  static string TypeCFDI { get; set; }
         public static string SiteERP { get; set; } = String.Empty;
         public static string V0CONO { get; set; } = String.Empty;
@@ -147,7 +152,7 @@ namespace ETLCountryPack
             END";
 
         //Agregado por JL para la validar la existencia de la tabla
-        public static string ValidateExistTable { get; set; } = @"IF EXISTS (SELECT * FROM sysobjects WHERE type = 'U' AND name = '{0}')
+        public static string ValidateExistTable { get; set; } = @"IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = '{0}')
 	        BEGIN
                 SELECT '1' AS Existe
             END
@@ -195,12 +200,24 @@ namespace ETLCountryPack
                         WHERE VRFOLIO='{2}' AND VRSERIE='{1}' AND VRCONO='{0}'";
         public static string UPDATEMXEIPX { get; set; } = @"UPDATE "+ ((GlobalStrings.UseMultisite) ? "MXEIPX_MST": "MXEIPX")+ " WITH(ROWLOCK) SET VRDCUR='{2}',VREXRT='{3}',VRMTPG='{4}',VRNCUO='{5}',VRPSDO='{6}',VRMPAG='{7}',VRNSDO='{8}',VRDCID='{10}' WHERE ISNULL(VRDSER,'')='{0}' AND VRDFOL='{1}' AND VRSERIE='{2}' AND VRFOLIO='{3}' ";
         //Agregado para pagos Multisite Impuestos
-        public static string SelectTaxesMulti { get; set; } = @" SELECT t.SiteRef,t.Base,t.Tax,t.TypeFactor,t.TasaOquote,t.Total,t.TaxConceptMultisiteID,t.UUID_DocRelated,t.Type_Tax,t.UFT1,t.UFD1,t.UFAMT1,t.Serie,t.Folio,t.CurrencyInvoice,t.TotalInvoice FROM ZMX_TaxConcept_Multi_mst t  WITH  (NOLOCK)
-                        INNER JOIN MXEIPX_mst PX  WITH  (NOLOCK) ON PX.VRDSER=t.serie AND VRDFOL=t.folio
+        public static string SelectTaxesMulti { get; set; } = @" SELECT t.SiteRef,t.Base,t.Tax,t.TypeFactor,t.TasaOquote,t.Total,t.TaxConceptMultisiteID,t.UUID_DocRelated,t.Type_Tax,t.UFT1,t.UFD1,t.UFAMT1,t.Serie,t.Folio,t.CurrencyInvoice,t.TotalInvoice FROM ZMX_TaxConcept_Multi_All t  WITH  (NOLOCK)
+                        INNER JOIN MXEIPX_ALL PX  WITH  (NOLOCK) ON PX.VRDSER=t.serie AND VRDFOL=t.folio
                         WHERE VRFOLIO='{2}' AND VRSERIE='{1}' AND VRCONO='{0}' ";
 
         public static string InsertTaxesMulti { get; set; } = @"INSERT INTO ZMX_TaxConcept_Multi  WITH(ROWLOCK) (SiteRef,Base,Tax,TypeFactor,TasaOquote,Total,TaxConceptMultisiteID,UUID_DocRelated,Type_Tax,UFT1,UFD1,UFAMT1,Serie,Folio,TotalInvoice,CurrencyInvoice)
                                                                 VALUES(@SiteRef,@Base,@Tax,@TypeFactor,@TasaOquote,@Total,@TaxConceptMultisiteID,@UUID_DocRelated,@Type_Tax,@UFT1,@UFD1,@UFAMT1,@Serie,@Folio,@TotalInvoice,@CurrencyInvoice)";
+
+
+        public static string InsertTaxesMultiSL { get; set; } = @"DELETE FROM ZMX_TaxConcept_Multi_All WITH(ROWLOCK) WHERE SiteRef='{0}' AND Serie='{12}' AND Folio='{13}' AND UUID_DocRelated = '{7}' AND TaxConceptMultisiteID = '{6}';
+                                                                DELETE FROM ZMX_TaxConcept_Multi WITH(ROWLOCK) WHERE SiteRef='{0}' AND Serie='{12}' AND Folio='{13}'  AND UUID_DocRelated = '{7}' AND TaxConceptMultisiteID = '{6}';
+                                                                INSERT INTO ZMX_TaxConcept_Multi  WITH(ROWLOCK) (SiteRef,Base,Tax,TypeFactor,TasaOquote,Total,TaxConceptMultisiteID,UUID_DocRelated,Type_Tax,UFT1,UFD1,UFAMT1,Serie,Folio,TotalInvoice,CurrencyInvoice)
+                                                                VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}',{9},{10},{11},'{12}','{13}','{14}','{15}')";
+
+
+        public static string InsertDocumentDocRelated { get; set; } = @"DELETE FROM MXEIRC WITH(ROWLOCK) WHERE VJCONO='{0}' AND VJSERIE='{1}' AND VJFOLIO='{2}' AND VJISERIE = '{4}' AND VJIFOLIO = '{5}';                                                                
+                                                                INSERT INTO MXEIRC  WITH(ROWLOCK) (VJCONO,VJSERIE,VJFOLIO,VJSEQN,VJISERIE,VJIFOLIO,VJRELTYPE)
+                                                                VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}')";
+
 
         public static string ValuesPaymentInsert { get; set; }
 
@@ -213,7 +230,7 @@ namespace ETLCountryPack
         //Agregado por JL para la busqueda del sitio
         public static string RecuperarSitio { get; set; } = @"SELECT TOP 1 ISNULL(site_ref,'DEFAULT') AS Site FROM parms_mst WITH (NOLOCK)";
 
-        public static string SetSite { get; set; } = @"EXEC SETSITESP '{0}',NULL ";
+        public static string SetSite { get; set; } = @"EXEC SETSITESP '{0}',NULL ;";
 
         //Agreado por JL para manejo de la configuracion del calculo de los importes
         public static string SelectConfiguracion { get; set; } = @"SELECT CalculateXML FROM ZMX_ConfigCFDI WITH (NOLOCK) ";
@@ -446,7 +463,7 @@ CASE WHEN (ISNULL(r.factor,1))=0 THEN 1 ELSE ISNULL(r.factor,1) END AS factor,  
          LEFT JOIN ZMX_RelationUM r ON c.unitId = r.um
          WHERE r.umERP='{0}' OR c.unitId = '{0}' "; */
 
-        public static string SelectImpuestosERP { get; set; } = @"SELECT V5IMPU AS impuestoERP,V5UUT1 AS UFT1, V5UUD1 AS UFD1, V5UUA1 AS UFAMT1, V5SEQN AS sequence , NEWID() AS taxConceptId, ISNULL(V5IMPO,0) AS total  
+        public static string SelectImpuestosERP { get; set; } = @"SELECT V5IMPU AS impuestoERP,V5UUT1 AS UFT1, V5UUA1 AS UFAMT1, V5SEQN AS sequence , NEWID() AS taxConceptId, ISNULL(V5IMPO,0) AS total  
                                                                 FROM MXEITX WITH (NOLOCK) INNER JOIN MXEIDT WITH (NOLOCK) ON V3SEQN=V5SEQN AND V3CONO=V5CONO AND V3SERIE=V5SERIE AND V3FOLIO=V5FOLIO
                                                                 WHERE V5CONO = '{0}' AND V5SERIE = '{1}' AND V5FOLIO = '{2}'  ";
         //Se modifica por error en prinsel
@@ -473,8 +490,8 @@ DELETE  FROM ZMX_Concept WHERE voucherId=  '{0}' ; ";
         //Se Mod. por Frisco. Sequitan las siguientes lineas
         //DELETE ZMX_CustomsInformation WHERE conceptId =@conceptId ;
         //DELETE ZMX_TaxConcept WHERE conceptId =@conceptId AND type=@type; 
-        public static string InsertNodoImpuestos { get; set; } = @"INSERT INTO ZMX_TaxConcept WITH(ROWLOCK) (SiteRef,base,tax,typeFactor,tasaOquote,total,taxConceptId,conceptId,type,UFT1,UFD1,UFAMT1)
-                                                                   VALUES ('{0}',@base,@taxId,@factor,@tasaOquote,@total,@taxConceptId,@conceptId,@type,@UFT1,@UFD1,@UFAMT1) ";
+        public static string InsertNodoImpuestos { get; set; } = @"INSERT INTO ZMX_TaxConcept WITH(ROWLOCK) (SiteRef,base,tax,typeFactor,tasaOquote,total,taxConceptId,conceptId,type,UFT1,UFAMT1)
+                                                                   VALUES ('{0}',@base,@taxId,@factor,@tasaOquote,@total,@taxConceptId,@conceptId,@type,@UFT1,@UFAMT1) ";
 
         public static string SelectExistsAddenda { get; set; } = @"IF EXISTS ( SELECT * FROM MXEIA1 WITH (NOLOCK) WHERE V1CONO='{0}' AND V1SERIE='{1}' AND V1FOLIO='{2}'  )
  SELECT '1' AS Exist ELSE SELECT '0' AS Exist ";
@@ -771,10 +788,22 @@ END ";
         public static string UpdateVoucherMXEIRQUUID { get; set; } = @"UPDATE MXEIRQ WITH(ROWLOCK) SET V9ERRD = '{3}', V9INLS = '{4}', V9ENDS = '{5}', V9STS = '{6}', V9UUID = '{7}', V9DATER = '{8}', V9NCERR = '{9}', V9FPCD = '{10}',V9CFDIREL='{11}'WHERE V9CONO = '{0}' AND V9SERIE = '{1}' AND V9FOLIO = '{2}' ";
 
         //Agregado por jl para actualizar en la hd para XA
-        public static string UpdateVoucherMXEIHD { get; set; } = @" UPDATE " + ConnectionData.SchemaDefault + ".MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}'  " +
+        //  public static string UpdateVoucherMXEIHD { get; set; } = @" UPDATE " + ConnectionData.SchemaDefault + ".MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}'  " +
+        //" WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
+        public static string UpdateVoucherMXEIHD { get; set; } = @" UPDATE MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}'  " +
 " WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
 
+        //  public static string UpdateVoucherMXEIHD { get; set; } = @" UPDATE MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}'  " +
+        //" WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
+        //  public static string UpdateVoucherMXEIHD { get; set; } = @" UPDATE MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}'  " +
+        //" WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
+
+
         public static string UpdateVoucherMXEIHDSL { get; set; } = @" UPDATE MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}', V0CDATE='{11}' " +
+" WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
+
+
+        public static string UpdateVoucherMXEIHDSLFIELDCUSTOM { get; set; } = @" UPDATE MXEIHD SET V0UUID = '{7}', V0DATER = '{8}', V0NCERR = '{9}', V0FPCD = '{10}', V0UUA1 = '{12}',V0UUA2 = '{13}',V0UUA3 = '{14}'" +
 " WHERE V0CONO = '{0}' AND V0SERIE = '{1}' AND V0FOLIO = '{2}' ";
         //
 
@@ -782,7 +811,9 @@ END ";
  SELECT '1' AS Exist ELSE SELECT '0' AS Exist ";
 
         //Se Agreaga V0UUT1 para agregar RFC a ZMX_Receiver
-        public static string SelectPOS { get; set; } = @"SELECT ISNULL(V0FPCD,'')V0FPCD,ISNULL(V0PWCD,'')V0PWCD,ISNULL(V0UUT1,'')V0UUT1,V2CONO,V2SERIE,V2FOLIO,
+        public static string SelectPOS { get; set; } = @"IF EXISTS(SELECT * FROM sys.columns  WHERE Name = N'V2TAXREG' AND Object_ID = Object_ID(N'MXEIAD'))
+BEGIN
+            SELECT ISNULL(V0FPCD,'')V0FPCD,ISNULL(V0PWCD,'')V0PWCD,ISNULL(V0UUT1,'')V0UUT1,V2CONO,V2SERIE,V2FOLIO,
 V2TREG,ISNULL(V2CALL,'') V2CALL,ISNULL(V2NEXT,'') V2NEXT,
 ISNULL(V2NINT,'') V2NINT,ISNULL(V2COLO,'') V2COLO,ISNULL(V2LOCL,'') V2LOCL,ISNULL(V2REFR,'') V2REFR,
 ISNULL(V2MUNI,'') V2MUNI,ISNULL(V2ESTA,'') V2ESTA,ISNULL(V2PAIS,'') V2PAIS,ISNULL(V2CPOS,'') V2CPOS,
@@ -791,12 +822,63 @@ ISNULL(V2UUD1,'') V2UUD1,--ISNULL(V2CPLE,'') V2CPLE,ISNULL(V2CECR,'') V2CECR,
 --ISNULL(V2CEIT,'') V2CEIT,ISNULL(V2CERF,'') V2CERF,ISNULL(V2CENM,'') V2CENM,
 --ISNULL(V2CTID,'') V2CTID,ISNULL(V2STID,'') V2STID,ISNULL(V2DELG,'') V2DELG,
 --ISNULL(V2LOCS,'') V2LOCS,ISNULL(V2CNID,'') V2CNID,ISNULL(V2USGE,'') 
-ISNULL(V2USGE,'')V2USGE ,ISNULL(V2SEAD,0) V2SEAD 
+ISNULL(V2USGE,'')V2USGE ,ISNULL(V2SEAD,0) V2SEAD , ISNULL(V2TAXREG,'') V2TAXREG
 FROM MXEIAD WITH (NOLOCK) LEFT JOIN MXEIHD WITH (NOLOCK) ON V2FOLIO=V0FOLIO AND V2SERIE=V0SERIE AND V2CONO=V0CONO
-WHERE V2CONO='{0}' AND V2SERIE='{1}' AND V2FOLIO='{2}' -- AND V2TREG <> 'C' ";
+WHERE V2CONO='{0}' AND V2SERIE='{1}' AND V2FOLIO='{2}' -- AND V2TREG <> 'C' 
+END
+ELSE
+BEGIN
+SELECT ISNULL(V0FPCD,'')V0FPCD,ISNULL(V0PWCD,'')V0PWCD,ISNULL(V0UUT1,'')V0UUT1,V2CONO,V2SERIE,V2FOLIO,
+V2TREG,ISNULL(V2CALL,'') V2CALL,ISNULL(V2NEXT,'') V2NEXT,
+ISNULL(V2NINT,'') V2NINT,ISNULL(V2COLO,'') V2COLO,ISNULL(V2LOCL,'') V2LOCL,ISNULL(V2REFR,'') V2REFR,
+ISNULL(V2MUNI,'') V2MUNI,ISNULL(V2ESTA,'') V2ESTA,ISNULL(V2PAIS,'') V2PAIS,ISNULL(V2CPOS,'') V2CPOS,
+ISNULL(V2LGEM,'') V2LGEM,ISNULL(V2TELEF,'') V2TELEF,ISNULL(V2UUT1,'') V2UUT1,
+ISNULL(V2UUD1,'') V2UUD1,--ISNULL(V2CPLE,'') V2CPLE,ISNULL(V2CECR,'') V2CECR,
+--ISNULL(V2CEIT,'') V2CEIT,ISNULL(V2CERF,'') V2CERF,ISNULL(V2CENM,'') V2CENM,
+--ISNULL(V2CTID,'') V2CTID,ISNULL(V2STID,'') V2STID,ISNULL(V2DELG,'') V2DELG,
+--ISNULL(V2LOCS,'') V2LOCS,ISNULL(V2CNID,'') V2CNID,ISNULL(V2USGE,'') 
+ISNULL(V2USGE,'')V2USGE ,ISNULL(V2SEAD,0) V2SEAD
+FROM MXEIAD WITH (NOLOCK) LEFT JOIN MXEIHD WITH (NOLOCK) ON V2FOLIO=V0FOLIO AND V2SERIE=V0SERIE AND V2CONO=V0CONO
+WHERE V2CONO='{0}' AND V2SERIE='{1}' AND V2FOLIO='{2}' -- AND V2TREG <> 'C' 
 
+END
+"
+
+            ;
+        public static string SelectPOSXA { get; set; } = @"SELECT ISNULL(V0FPCD,'')V0FPCD,ISNULL(V0PWCD,'')V0PWCD,ISNULL(V0UUT1,'')V0UUT1,V2CONO,V2SERIE,V2FOLIO,
+V2TREG,ISNULL(V2CALL,'') V2CALL,ISNULL(V2NEXT,'') V2NEXT,
+ISNULL(V2NINT,'') V2NINT,ISNULL(V2COLO,'') V2COLO,ISNULL(V2LOCL,'') V2LOCL,ISNULL(V2REFR,'') V2REFR,
+ISNULL(V2MUNI,'') V2MUNI,ISNULL(V2ESTA,'') V2ESTA,ISNULL(V2PAIS,'') V2PAIS,ISNULL(V2CPOS,'') V2CPOS,
+ISNULL(V2LGEM,'') V2LGEM,ISNULL(V2TELEF,'') V2TELEF,ISNULL(V2UUT1,'') V2UUT1,
+ISNULL(V2UUD1,'') V2UUD1,--ISNULL(V2CPLE,'') V2CPLE,ISNULL(V2CECR,'') V2CECR,
+--ISNULL(V2CEIT,'') V2CEIT,ISNULL(V2CERF,'') V2CERF,ISNULL(V2CENM,'') V2CENM,
+--ISNULL(V2CTID,'') V2CTID,ISNULL(V2STID,'') V2STID,ISNULL(V2DELG,'') V2DELG,
+--ISNULL(V2LOCS,'') V2LOCS,ISNULL(V2CNID,'') V2CNID,ISNULL(V2USGE,'') 
+ISNULL(V2USGE,'')V2USGE ,ISNULL(V2SEAD,0) V2SEAD
+FROM MXEIAD WITH (NOLOCK) LEFT JOIN MXEIHD WITH (NOLOCK) ON V2FOLIO=V0FOLIO AND V2SERIE=V0SERIE AND V2CONO=V0CONO
+WHERE V2CONO='{0}' AND V2SERIE='{1}' AND V2FOLIO='{2}' -- AND V2TREG <> 'C' 
+"
+
+          ;
         //WHERE V2CONO = '{0}' AND V2SERIE = '{1}' AND V2FOLIO = '{2}' AND V2TREG = 'S' ";
-        public static string InsertPOS { get; set; } = @" IF( @V0UUT1 != '' AND  @V2TREG = 'S' AND @V2UUT1='POS')
+        public static string InsertPOS { get; set; } = @" IF EXISTS(SELECT * FROM sys.columns  WHERE Name = N'V2TAXREG' AND Object_ID = Object_ID(N'ZMX_MXEIAD'))
+BEGIN
+IF( @V0UUT1 != '' AND  @V2TREG = 'S' AND @V2UUT1='POS')
+BEGIN  UPDATE ZMX_Receiver  WITH(ROWLOCK) SET usecfdiId=@V2USGE, rfc=@V0UUT1 WHERE voucherId = '{0}' END
+ELSE IF ( @V2UUT1='POS')BEGIN UPDATE ZMX_Receiver WITH(ROWLOCK) SET usecfdiId=@V2USGE  WHERE voucherId = '{0}' END;
+IF( @V2TREG = 'R' AND @V2UUT1='POS' )
+BEGIN UPDATE ZMX_Receiver  WITH(ROWLOCK) SET name=@V2LGEM WHERE voucherId = '{0}' END;
+IF (@V2UUT1='POS')
+BEGIN UPDATE ZMX_Voucher  WITH(ROWLOCK) SET paymentMethod=@V0FPCD , paymentWay=@V0PWCD WHERE voucherId ='{0}' END;
+IF(ISNULL(@V2TAXREG,'') != '' )
+BEGIN UPDATE ZMX_Receiver  WITH(ROWLOCK) SET RegimenFiscalReceptor=@V2TAXREG WHERE voucherId = '{0}' END;
+DELETE ZMX_MXEIAD WITH(ROWLOCK) WHERE V2CONO=@V2CONO AND V2SERIE=@V2SERIE AND V2FOLIO=@V2FOLIO AND V2TREG=@V2TREG;
+INSERT INTO ZMX_MXEIAD  WITH(ROWLOCK) (V2CONO,V2SERIE,V2FOLIO,V2TREG,V2CALL,V2NEXT,V2NINT,V2COLO,V2LOCL,V2REFR,V2MUNI,V2ESTA,V2PAIS,V2CPOS,V2LGEM,V2TELEF,V2UUT1,V2UUD1,V2USGE,V2SEAD,V2TAXREG)
+VALUES(@V2CONO,@V2SERIE,@V2FOLIO,@V2TREG,@V2CALL,@V2NEXT,@V2NINT,@V2COLO,@V2LOCL,@V2REFR,@V2MUNI,@V2ESTA,@V2PAIS,@V2CPOS,@V2LGEM,@V2TELEF,@V2UUT1,@V2UUD1,@V2USGE,@V2SEAD,@V2TAXREG) 
+END
+ELSE
+BEGIN 
+IF( @V0UUT1 != '' AND  @V2TREG = 'S' AND @V2UUT1='POS')
 BEGIN  UPDATE ZMX_Receiver  WITH(ROWLOCK) SET usecfdiId=@V2USGE, rfc=@V0UUT1 WHERE voucherId = '{0}' END
 ELSE IF ( @V2UUT1='POS')BEGIN UPDATE ZMX_Receiver WITH(ROWLOCK) SET usecfdiId=@V2USGE  WHERE voucherId = '{0}' END;
 IF( @V2TREG = 'R' AND @V2UUT1='POS' )
@@ -805,9 +887,22 @@ IF (@V2UUT1='POS')
 BEGIN UPDATE ZMX_Voucher  WITH(ROWLOCK) SET paymentMethod=@V0FPCD , paymentWay=@V0PWCD WHERE voucherId ='{0}' END;
 DELETE ZMX_MXEIAD WITH(ROWLOCK) WHERE V2CONO=@V2CONO AND V2SERIE=@V2SERIE AND V2FOLIO=@V2FOLIO AND V2TREG=@V2TREG;
 INSERT INTO ZMX_MXEIAD  WITH(ROWLOCK) (V2CONO,V2SERIE,V2FOLIO,V2TREG,V2CALL,V2NEXT,V2NINT,V2COLO,V2LOCL,V2REFR,V2MUNI,V2ESTA,V2PAIS,V2CPOS,V2LGEM,V2TELEF,V2UUT1,V2UUD1,V2USGE,V2SEAD)
-VALUES(@V2CONO,@V2SERIE,@V2FOLIO,@V2TREG,@V2CALL,@V2NEXT,@V2NINT,@V2COLO,@V2LOCL,@V2REFR,@V2MUNI,@V2ESTA,@V2PAIS,@V2CPOS,@V2LGEM,@V2TELEF,@V2UUT1,@V2UUD1,@V2USGE,@V2SEAD) ";
+VALUES(@V2CONO,@V2SERIE,@V2FOLIO,@V2TREG,@V2CALL,@V2NEXT,@V2NINT,@V2COLO,@V2LOCL,@V2REFR,@V2MUNI,@V2ESTA,@V2PAIS,@V2CPOS,@V2LGEM,@V2TELEF,@V2UUT1,@V2UUD1,@V2USGE,@V2SEAD) 
+END
+";
 
-
+        public static string InsertPOSXA { get; set; } = @"
+IF( @V0UUT1 != '' AND  @V2TREG = 'S' AND @V2UUT1='POS')
+BEGIN  UPDATE ZMX_Receiver  WITH(ROWLOCK) SET usecfdiId=@V2USGE, rfc=@V0UUT1 WHERE voucherId = '{0}' END
+ELSE IF ( @V2UUT1='POS')BEGIN UPDATE ZMX_Receiver WITH(ROWLOCK) SET usecfdiId=@V2USGE  WHERE voucherId = '{0}' END;
+IF( @V2TREG = 'R' AND @V2UUT1='POS' )
+BEGIN UPDATE ZMX_Receiver  WITH(ROWLOCK) SET name=@V2LGEM WHERE voucherId = '{0}' END;
+IF (@V2UUT1='POS')
+BEGIN UPDATE ZMX_Voucher  WITH(ROWLOCK) SET paymentMethod=@V0FPCD , paymentWay=@V0PWCD WHERE voucherId ='{0}' END;
+DELETE ZMX_MXEIAD WITH(ROWLOCK) WHERE V2CONO=@V2CONO AND V2SERIE=@V2SERIE AND V2FOLIO=@V2FOLIO AND V2TREG=@V2TREG;
+INSERT INTO ZMX_MXEIAD  WITH(ROWLOCK) (V2CONO,V2SERIE,V2FOLIO,V2TREG,V2CALL,V2NEXT,V2NINT,V2COLO,V2LOCL,V2REFR,V2MUNI,V2ESTA,V2PAIS,V2CPOS,V2LGEM,V2TELEF,V2UUT1,V2UUD1,V2USGE,V2SEAD)
+VALUES(@V2CONO,@V2SERIE,@V2FOLIO,@V2TREG,@V2CALL,@V2NEXT,@V2NINT,@V2COLO,@V2LOCL,@V2REFR,@V2MUNI,@V2ESTA,@V2PAIS,@V2CPOS,@V2LGEM,@V2TELEF,@V2UUT1,@V2UUD1,@V2USGE,@V2SEAD) 
+";
         //Querys para Complemento de impuestos locales
         public static string SelectExistsImpuestosLocales { get; set; } = @"IF EXISTS(SELECT TOP 1 VLCONO,VLSERIE FROM  MXEITXL MXEITXL WITH (NOLOCK) WHERE VLCONO= '{0}' AND VLSERIE = '{1}' AND VLFOLIO = '{2}' )
  SELECT '1' AS Exist ELSE SELECT '0' AS Exist ";
@@ -1170,8 +1265,8 @@ RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,'{2}'
 
         public static string SelectImpuestosERP { get; set; } = @"SELECT LTRIM(RTRIM(V5IMPU)) AS impuestoERP,
  V5UUT1 AS UFT1,-- COALESCE(V5UUD1,'01/01/1753') UFD1,
-CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V5UUD1='0001-01-01' AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN ' '
-ELSE (SELECT  (cast(V0UUD3 as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS UFD1, 
+--CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V5UUD1='0001-01-01' AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN ' '
+--ELSE (SELECT  (cast(V0UUD3 as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS UFD1, 
 V5UUA1 AS UFAMT1, 
 V5SEQN AS sequence ,
  '00000000-0000-0000-0000-000000000000' AS taxConceptId,
@@ -1197,12 +1292,22 @@ WHERE V1CONO='{0}' AND V1SERIE='{1}' AND V1FOLIO='{2}' ";
         public static string InicializaRegistroERP { get; set; } = @"SELECT  '1' AS EXISTS FROM QGPL.MXEIRQ  FETCH FIRST 1 ROWS ONLY WITH UR "; //@"SELECT 1 AS EXISTS FROM sysibm.sysdummy1 ";
 
         //V9CONO='{0}' V9SERIE='{1}' V9FOLIO= '{2}'
-        public static string ValidaVoucherMXEIRQ { get; set; } = @" SELECT  CASE WHEN (
- (SELECT 1 AS EXISTS  from sysibm.sysdummy1 WHERE EXISTS ( SELECT * FROM MXEIRQ WHERE V9CONO='{0}' AND V9SERIE='{1}' AND V9FOLIO='{2}'  AND VARCHAR_FORMAT (V9DTTM,'YYYY-MM-DD') = 'TIMESTAMP' ) )=1
-)
-THEN ( select  '1' from sysibm.sysdummy1 ) 
-ELSE  ( select  '0' from sysibm.sysdummy1 ) END AS Exist
- from sysibm.sysdummy1 WHERE EXISTS ( SELECT * FROM MXEIRQ )"; //Falta ver si hay que considerar InsertVoucherMXEIRQ AND UPDATEVoucherMXEIRQ
+
+        public static string ValidaVoucherMXEIRQ { get; set; } = @"SELECT CASE 
+(SELECT  '1'   FROM QGPL.MXEIRQ  WHERE V9CONO='{0}' AND V9SERIE='{1}' AND V9FOLIO='{2}'  AND VARCHAR_FORMAT (V9DTTM,'YYYY-MM-DD') = 'TIMESTAMP')
+WHEN '1' THEN ('1')
+ELSE '0' 
+END AS Exist
+FROM QGPL.MXEIRQ FETCH FIRST 1 ROWS ONLY WITH UR";
+            //biomoet
+        //public static string ValidaVoucherMXEIRQ { get; set; } = @"SELECT  '1' AS Exist FROM MXEIRQ  FETCH FIRST 1 ROWS ONLY WITH UR ";
+       
+            //public static string ValidaVoucherMXEIRQ { get; set; } = @" SELECT  CASE WHEN (
+         //(SELECT 1 AS EXISTS  from sysibm.sysdummy1 WHERE EXISTS ( SELECT * FROM MXEIRQ WHERE V9CONO='{0}' AND V9SERIE='{1}' AND V9FOLIO='{2}'  AND VARCHAR_FORMAT (V9DTTM,'YYYY-MM-DD') = 'TIMESTAMP' ) )=1
+        //)
+        //THEN ( select  '1' from sysibm.sysdummy1 ) 
+        //ELSE  ( select  '0' from sysibm.sysdummy1 ) END AS Exist
+         //from sysibm.sysdummy1 WHERE EXISTS ( SELECT * FROM MXEIRQ )"; //Falta ver si hay que considerar InsertVoucherMXEIRQ AND UPDATEVoucherMXEIRQ
 
         //{0}=Cono,{1}=Serie,{2}=Folio,{3}=Message,{4}=INLS,{5}=ENDS,{6}=STS
         public static string InsertVoucherMXEIRQ { get; set; } = @"INSERT INTO MXEIRQ(V9DTTM,V9CONO,V9SERIE,V9FOLIO,V9ERRD,V9INLS,V9ENDS,V9STS)
@@ -1237,8 +1342,9 @@ WHERE V9CONO = '{0}' AND V9SERIE =  '{1}' AND V9FOLIO = '{2}' AND VARCHAR_FORMAT
   COALESCE(VRDSER,'') AS VRDSER,  COALESCE(VRDFOL,'') AS VRDFOL,  COALESCE(VRDCUR,'') AS VRDCUR,  
   COALESCE(VREXRT,0) AS VREXRT,  COALESCE(VRMTPG,'') AS VRMTPG,  COALESCE(VRNCUO,0) AS VRNCUO,  
   COALESCE(VRPSDO,0) AS VRPSDO,  COALESCE(VRMPAG,0) AS VRMPAG,  COALESCE(VRNSDO,0) AS VRNSDO ,  
-CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (V0DATE)
-ELSE (SELECT  (cast(V0DATE as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS V0DATE
+  VARCHAR_FORMAT(V0DATE,'YYYY-MM-DD') AS V0DATE
+--CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (V0DATE)
+--ELSE (SELECT  (cast(V0DATE as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS V0DATE
   FROM MXEIHD  
   LEFT JOIN MXEIPY ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
