@@ -399,6 +399,93 @@ public class ExtractData : ConventionInputCommandOperation
             }
         }
     }
+
+    public class MachConceptoKits : AbstractOperation
+    {
+
+        private string item;
+        private string unit;
+        private string unitIdERP;
+        private string descripcion;
+        //Agregado por JL  para los conceptos faltantes
+        //private List<Conceptos> listNewConcept;
+        //public MachConcepto(List<Conceptos> listaNewConcept)
+        //{
+        //    this.listNewConcept = listaNewConcept;
+        //}
+        public override IEnumerable<Row> Execute(IEnumerable<Row> rows)
+        {
+
+
+            foreach (Row row in rows)
+            {
+                item = (string)row["noIdentification"].ToString().Trim();
+                descripcion = (string)row["description"];
+               unitIdERP = (string)row["unit"].ToString().Trim();
+
+
+                ExNihiloGetMachConcepto getMachConcepto = new ExNihiloGetMachConcepto(item);
+                getMachConcepto.UseTransaction = false;
+                getMachConcepto.Execute();
+                if (getMachConcepto.GetAllErrors().Count() > 0)
+                {
+                    foreach (Exception ex in getMachConcepto.GetAllErrors())
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }
+                if (getMachConcepto.ObjgetMachConcepto.getprodServId() == null)
+                    row["prodServId"] = "";
+                else
+                    row["prodServId"] = getMachConcepto.ObjgetMachConcepto.getprodServId();
+                //Se toma la descripcion de las tablas intermedias (MXEIDT) si es NULL se toma del CountryPack
+                if (descripcion == "NULL")
+                {
+                    if (getMachConcepto.ObjgetMachConcepto.getdescription() == null)
+                        row["description"] = "";
+                    else
+                        row["description"] = getMachConcepto.ObjgetMachConcepto.getdescription();
+                }
+                //Se comenta para mandar al xml la clave de la unidad del ERP
+                //if (getMachConcepto.ObjgetMachConcepto.getunit() == null)
+                //    row["unit"] = "";
+                //else
+                //    row["unit"] = getMachConcepto.ObjgetMachConcepto.getunit();
+                //Se toma la clave UM de las tablas intermedias (MXEIDT) para enviar al xml la clave de la unidad del ERP
+                row["unit"] = unitIdERP;
+                //Se toma la clave UM de las tablas intermedias (MXEIDT) si es NULL se toma del CountryPack
+                if (unitIdERP == "NULL")
+                {
+                    if (getMachConcepto.ObjgetMachConcepto.getunitId() == null)
+                        row["unitId"] = "";
+                    else
+                        unitIdERP = getMachConcepto.ObjgetMachConcepto.getunitId().Trim();
+                }
+
+                //----------------------------Aqui estoy Programando
+                ExNihiloGetclaveUnidad GetclaveUnidad = new ExNihiloGetclaveUnidad(unitIdERP);
+                GetclaveUnidad.UseTransaction = false;
+                GetclaveUnidad.Execute();
+
+                if (GetclaveUnidad.GetAllErrors().Count() > 0)
+                {
+                    foreach (Exception ex in GetclaveUnidad.GetAllErrors())
+                    {
+                        GlobalStrings.intRollback = 1;
+                        GlobalStrings.msgNotExistUM = "Verifica que las unidades de medida de la factura esten registradas en CFDI3.3";
+                        Console.WriteLine(ex.Message);
+
+                    }
+                }
+
+              
+                //row["total"] = Math.Round((decimal)row["total"], GlobalStrings.objVoucherDec.Concept_Imp_import);
+
+                yield return row;
+
+            }
+        }
+    }
     public class MachConcepto : AbstractOperation
     {
 
@@ -503,10 +590,13 @@ public class ExtractData : ConventionInputCommandOperation
                     row["unit"] = GetclaveUnidad.Objgetclaveunidad.getnombreUnidad().Trim();
                     row["quantity"] = (decimal)row["quantity"] * factorConversion;
                     row["unitvalue"] = (decimal)row["unitvalue"] / factorConversion;
-                    if (GlobalStrings.UseConfigDecimals)                    
-                        row["total"] = Decimal.Round(Decimal.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
-                    else
-                        row["total"] = (decimal)row["quantity"] * (decimal)row["unitvalue"];
+                    if (GlobalStrings.RecalculateImports)
+                    {
+                        if (GlobalStrings.UseConfigDecimals)
+                            row["total"] = Decimal.Round(Decimal.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
+                        else
+                            row["total"] = (decimal)row["quantity"] * (decimal)row["unitvalue"];
+                    }
                 }
 
                 //Agregado por JL para el manejo de los recalculos de los importes 
@@ -515,47 +605,57 @@ public class ExtractData : ConventionInputCommandOperation
                 {                   
                     if (GlobalStrings.ListConfiguraciones.FirstOrDefault().CalculateXML == 1)
                     {
-                       
-                        if (GlobalStrings.UseConfigDecimals)
+                        if (GlobalStrings.RecalculateImports)
                         {
-                          
-                            row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
-                        }
-                        else
-                        {
-                          
-                            row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+                            if (GlobalStrings.UseConfigDecimals)
+                            {
+
+                                row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
+                            }
+                            else
+                            {
+
+                                row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+
+                            }
                         }
                     }
                     else
                     {
-                     
-                        if (GlobalStrings.UseConfigDecimals)
+                        if (GlobalStrings.RecalculateImports)
                         {
-                            row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
-                        }
-                        else
-                        {
-                            row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+                            if (GlobalStrings.UseConfigDecimals)
+                            {
+                                row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
+                            }
+                             else
+                                {                           
+                                row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+                                }
                         }
                     }
 
                 }
                 else
                 {
-                    
-                    //Si no logra recuperar configuraciones funciona de manera normal
-                    if (GlobalStrings.UseConfigDecimals)
+                    if (GlobalStrings.RecalculateImports)
                     {
-                        row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
-                    }
-                    else
-                    {
-                        row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+
+                        //Si no logra recuperar configuraciones funciona de manera normal
+                        if (GlobalStrings.UseConfigDecimals)
+                        {
+                            row["total"] = Math.Round(Math.Round((decimal)row["quantity"], GlobalStrings.objVoucherDec.Concept_Amount) * Math.Round((decimal)row["unitvalue"], GlobalStrings.objVoucherDec.Concept_PriceUnit), GlobalStrings.objVoucherDec.Concept_Imp_import);
+                        }
+                        else
+                        {
+                            row["total"] = Math.Abs((decimal)row["quantity"] * (decimal)row["unitvalue"]);
+                        }
                     }
                 }
-             
-                row["total"] = (decimal)row["total"];
+                if (GlobalStrings.RecalculateImports)
+                {
+                    row["total"] = (decimal)row["total"];
+                }
                 //row["total"] = Math.Round((decimal)row["total"], GlobalStrings.objVoucherDec.Concept_Imp_import);
                
                 yield return row;
@@ -937,7 +1037,8 @@ public class ExtractData : ConventionInputCommandOperation
 
                 try
                 {
-                    pedimento = string.Format("{0:##  ##  ####  #######}", long.Parse(pedimento));
+                    // pedimento = string.Format("{0:##  ##  ####  #######}", long.Parse(pedimento));
+                    pedimento = string.Format("{0:##  ##  ####  #######}", pedimento);
                 }
                 catch (Exception e)
                 {
@@ -1268,6 +1369,33 @@ public class ExtractData : ConventionInputCommandOperation
             return this.list;
         }
     }
+
+
+    public class ExNihiloNodoKits : EtlProcess
+    {
+        private string querySelect;
+        private string queryInsert;
+      
+        public ExNihiloNodoKits(string InputData, string OutputData)
+        {
+            this.querySelect = InputData;
+            this.queryInsert = OutputData;        
+
+        }
+        protected override void Initialize()
+        {
+            
+            Register(new ExtractData(querySelect));
+
+            Register(new MachConceptoKits());
+           
+          
+            
+            Register(new LoadData(queryInsert));
+        }
+      
+    }
+
     public class ExNihiloPedimentosConceptos : EtlProcess
     {
         private string querySelect;
@@ -2320,6 +2448,23 @@ public class ExtractData : ConventionInputCommandOperation
                 }
             }
             Console.WriteLine("Finaliza limpieza nodo impuesto");
+        }
+
+        void LimpiaNodoKits(string OutputData)
+        {
+            Console.WriteLine("Inicia limpiar nodo Kits");
+            string InputData = GlobalStrings.InicializaRegistroERP;
+            ExNihiloGenericExtraction DeleteKits = new ExNihiloGenericExtraction(InputData, OutputData);
+            DeleteKits.UseTransaction = false;
+            DeleteKits.Execute();
+            if (DeleteKits.GetAllErrors().Count() > 0)
+            {
+                foreach (Exception ex in DeleteKits.GetAllErrors())
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            Console.WriteLine("Finaliza limpieza nodo Kits");
         }
         //Agregado por JL -2812019 para eliminar px y py
         void LimpiaPXPY(string OutputData)
@@ -3402,7 +3547,64 @@ public class ExtractData : ConventionInputCommandOperation
                         LimpiaNodoImpuesto(sDeleteImpuestos);
                         NodoImpuestos(listConceptos);
                         //Extraccion impuestos
-                       
+
+
+                        if (GlobalStrings.ERP != "XA")
+                        {
+                            ///Validacion de tablas parte
+                            var sValidateTableKITS = string.Format(GlobalStrings.ValidateExistTable, "MXEIPTS");
+
+                            if (ValidateExistTableERP(sValidateTableKITS) == "1")
+                            {
+                                //Validar si hay registros relacionados a la factura
+                                var sKitsInput = string.Format(GlobalStrings.SelectMXEIKits, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                                var sKitsOutput = string.Format(GlobalStrings.InsertKitsParts, GlobalStrings.SiteRef, GlobalStrings.comprobanteId);
+                                Console.WriteLine("Inicia extraccion nodo kits");
+                                sDeleteImpuestos = string.Format(GlobalStrings.DeleteKits, GlobalStrings.comprobanteId);
+                                LimpiaNodoKits(sDeleteImpuestos);
+                                //Eliminar kits si hay reimpresion
+                                ExNihiloNodoKits NodoKits = new ExNihiloNodoKits(sKitsInput, sKitsOutput);
+                                NodoKits.UseTransaction = false;
+                                NodoKits.Execute();
+                                if (NodoKits.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in NodoKits.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
+                                Console.WriteLine("Finaliza extraccion nodo kits");
+
+                            }
+                        }
+                        else
+                        {
+                             if (GlobalStrings.ExtraerKitsXA)
+                             {
+                                 //Validar si hay registros relacionados a la factura
+                                 var sKitsInput = string.Format(GlobalStrings.SelectMXEIKits, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                                 var sKitsOutput = string.Format(GlobalStrings.InsertKitsParts, GlobalStrings.SiteRef, GlobalStrings.comprobanteId);
+                                 Console.WriteLine("Inicia extraccion nodo kits");
+                                 sDeleteImpuestos = string.Format(GlobalStrings.DeleteKits, GlobalStrings.comprobanteId);
+                                 LimpiaNodoKits(sDeleteImpuestos);
+                                 //Eliminar kits si hay reimpresion
+                                 ExNihiloNodoKits NodoKits = new ExNihiloNodoKits(sKitsInput, sKitsOutput);
+                                 NodoKits.UseTransaction = false;
+                                 NodoKits.Execute();
+                                 if (NodoKits.GetAllErrors().Count() > 0)
+                                 {
+                                     foreach (Exception ex in NodoKits.GetAllErrors())
+                                     {
+                                         Console.WriteLine(ex.Message);
+                                     }
+                                 }
+
+                                 Console.WriteLine("Finaliza extraccion nodo kits");
+                             }
+                        }
+                        ///
+
                        
                         //CXA
 
@@ -3736,11 +3938,15 @@ public class ExtractData : ConventionInputCommandOperation
                         NodoReceptor(sNodoReceptor);
                         //
 
+                        sDeleteImpuestos = string.Format(GlobalStrings.DeleteKits, GlobalStrings.comprobanteIdUpdate);
+                        LimpiaNodoKits(sDeleteImpuestos);
 
                         //Eliminar conceptos antes de actualizar                        
                         string deleteconcept = string.Format(GlobalStrings.DeleteConceptos, GlobalStrings.comprobanteIdUpdate);
                         LimpiaNodoConcepto(deleteconcept);
                         //
+
+                   
                         //Extraccion conceptos
                         sNodoConceptosInput = string.Format(GlobalStrings.SelectNodoConcepto, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                         sNodoConceptosOutput = string.Format(GlobalStrings.InsertNodoConcepto, GlobalStrings.comprobanteIdUpdate, GlobalStrings.SiteRef);
@@ -3750,7 +3956,59 @@ public class ExtractData : ConventionInputCommandOperation
                         //Extraccion nodo impuestos
                         NodoImpuestos(listConceptos);
                         //
+                        if (GlobalStrings.ERP != "XA")
+                        {
+                            ///Validacion de tablas parte
+                            var sValidateTableKITS = string.Format(GlobalStrings.ValidateExistTable, "MXEIPTS");
 
+                            if (ValidateExistTableERP(sValidateTableKITS) == "1")
+                            {
+                                //Validar si hay registros relacionados a la factura
+                                var sKitsInput = string.Format(GlobalStrings.SelectMXEIKits, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                                var sKitsOutput = string.Format(GlobalStrings.InsertKitsParts, GlobalStrings.SiteRef, GlobalStrings.comprobanteIdUpdate);
+                                Console.WriteLine("Inicia extraccion nodo kits");
+                             
+                                //Eliminar kits si hay reimpresion
+                                ExNihiloNodoKits NodoKits = new ExNihiloNodoKits(sKitsInput, sKitsOutput);
+                                NodoKits.UseTransaction = false;
+                                NodoKits.Execute();
+                                if (NodoKits.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in NodoKits.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
+                                Console.WriteLine("Finaliza extraccion nodo kits");
+
+                            }
+                        }
+                        else
+                        {
+                            if (GlobalStrings.ExtraerKitsXA)
+                            {
+                                //Validar si hay registros relacionados a la factura
+                                var sKitsInput = string.Format(GlobalStrings.SelectMXEIKits, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
+                                var sKitsOutput = string.Format(GlobalStrings.InsertKitsParts, GlobalStrings.SiteRef, GlobalStrings.comprobanteId);
+                                Console.WriteLine("Inicia extraccion nodo kits");
+                                sDeleteImpuestos = string.Format(GlobalStrings.DeleteKits, GlobalStrings.comprobanteId);
+                                LimpiaNodoKits(sDeleteImpuestos);
+                                //Eliminar kits si hay reimpresion
+                                ExNihiloNodoKits NodoKits = new ExNihiloNodoKits(sKitsInput, sKitsOutput);
+                                NodoKits.UseTransaction = false;
+                                NodoKits.Execute();
+                                if (NodoKits.GetAllErrors().Count() > 0)
+                                {
+                                    foreach (Exception ex in NodoKits.GetAllErrors())
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
+                                }
+
+                                Console.WriteLine("Finaliza extraccion nodo kits");
+                            }
+                        }
                         //Extraccion pedimentos
                         //if (GlobalStrings.ERP != "XA")
                         PedimentosConceptos(listConceptos);
@@ -4166,9 +4424,11 @@ public class ExtractData : ConventionInputCommandOperation
                             if (GlobalStrings.ValidateCol == "1")
                             {
                                 GlobalStrings.ValidateCol = "0";
-                                GlobalStrings.ParamsPaymentInsert += ",@MLSITE,";
+                                //GlobalStrings.ParamsPaymentInsert += ",@MLSITE,";
+                                GlobalStrings.ParamsPaymentInsert += ",'1',";
                                 GlobalStrings.ValuesPaymentInsert += ",MLSITE,";
-                                GlobalStrings.ParamsPaymentUpdate += ",MLSITE=@MLSITE,";
+                                GlobalStrings.ParamsPaymentUpdate += ",MLSITE='1',";
+                                //GlobalStrings.ParamsPaymentUpdate += ",MLSITE=@MLSITE,";
                             }
 
                             GlobalStrings.ValuesPaymentInsert = !string.IsNullOrEmpty(GlobalStrings.ValuesPaymentInsert) ? GlobalStrings.ValuesPaymentInsert.Remove(GlobalStrings.ValuesPaymentInsert.Length - 1, 1) : GlobalStrings.ValuesPaymentInsert;
@@ -4199,7 +4459,10 @@ public class ExtractData : ConventionInputCommandOperation
 
                 /*string InputData = string.Format(GlobalStrings.SelectPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO);
                 string OutputData = string.Format(GlobalStrings.InsertPaymentsInvoice, GlobalStrings.V0CONO, GlobalStrings.V0SERIE, GlobalStrings.V0FOLIO, GlobalStrings.pathCFDI,GlobalStrings.Parm_Site);*/
-
+              //  Console.WriteLine("Multisite select");
+                //Console.WriteLine(InputData);
+                //Console.WriteLine("Multisite Insert");
+                //Console.WriteLine(OutputData);
                 ExNihiloGenericExtraction PaymentsInvoice = new ExNihiloGenericExtraction(InputData, OutputData);
                 PaymentsInvoice.UseTransaction = false;
                 PaymentsInvoice.Execute();
@@ -4576,15 +4839,17 @@ public class ExtractData : ConventionInputCommandOperation
                     GlobalStrings.SyncTableTaxSL = Boolean.Parse(xelement.Attribute("SyncTableTaxSL").Value);
                 else
                     GlobalStrings.SyncTableTaxSL = false;
-
                 Console.WriteLine("recuperando use SyncTableTaxSL");
-
+              
+               
                 if (AttributeFound.Where(o => o.Name == "DocumentCFDIRelated").ToList().Count > 0)
                     GlobalStrings.DocumentCFDIRelated = Boolean.Parse(xelement.Attribute("DocumentCFDIRelated").Value);
                 else
                     GlobalStrings.DocumentCFDIRelated = false;
-
                 Console.WriteLine("recuperando DocumentCFDIRelated");
+              
+
+              
 
                 if (AttributeFound.Where(o => o.Name == "UpdateAditionalDataHD").ToList().Count > 0)
                     GlobalStrings.UpdateAditionalDataHD = Boolean.Parse(xelement.Attribute("UpdateAditionalDataHD").Value);
@@ -4592,6 +4857,20 @@ public class ExtractData : ConventionInputCommandOperation
                     GlobalStrings.UpdateAditionalDataHD = false;
 
                 Console.WriteLine("recuperando UpdateAditionalDataHD");
+
+                if (AttributeFound.Where(o => o.Name == "RecalculateImports").ToList().Count > 0)
+                    GlobalStrings.RecalculateImports = Boolean.Parse(xelement.Attribute("RecalculateImports").Value);
+                else
+                    GlobalStrings.RecalculateImports = true;
+                Console.WriteLine("recuperando RecalculateImports");
+
+                if (AttributeFound.Where(o => o.Name == "ExtraerKitsXA").ToList().Count > 0)
+                    GlobalStrings.ExtraerKitsXA = Boolean.Parse(xelement.Attribute("ExtraerKitsXA").Value);
+                else
+                    GlobalStrings.ExtraerKitsXA = false;
+                Console.WriteLine("recuperando ExtraerKitsXA");
+
+            
 
             }
            else
@@ -4605,6 +4884,7 @@ public class ExtractData : ConventionInputCommandOperation
                 GlobalStrings.SyncTableTaxSL = false;
                 GlobalStrings.DocumentCFDIRelated = false;
                 GlobalStrings.UpdateAditionalDataHD = false;
+                GlobalStrings.ExtraerKitsXA = false;
                 Console.WriteLine("Fin proceso recuperacion configuraciones default");
             }
 

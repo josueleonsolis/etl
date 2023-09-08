@@ -92,6 +92,8 @@ namespace ETLCountryPack
         //
         //Agregado por JL -29102019 para el manejo de la configuracion del subtotal cuando el erp sea XA
         public static bool GetSubTotalXA { get; set; } = false;
+        public static bool ExtraerKitsXA { get; set; } = false;
+        //
         public static bool UseConfigDecimals { get; set; } = false;
         //Agregado por JL -25052020 para el manejo de la configuracion Multisite
         public static bool UseMultisite { get; set; } = false;
@@ -101,6 +103,8 @@ namespace ETLCountryPack
         public static bool SyncTableTaxSL { get; set; } = false;
 
         public static bool DocumentCFDIRelated { get; set; } = false;
+
+        public static bool RecalculateImports{ get; set; } = false;
         //
         public static bool UpdateAditionalDataHD { get; set; } = false;
         //Agregado por JL para almacenar el tipo de documento
@@ -378,6 +382,11 @@ EXECUTE sp_executesql N'SELECT V0SERIE AS serie,V0FOLIO AS folio,V0DATE AS date,
         public static string SelectNodoConcepto { get; set; } = @"SELECT V3CNID AS noIdentification,ABS(V3CANT) AS quantity,ABS(V3UNPR) AS unitvalue,ABS(ISNULL(V3DISC,0)) AS discount,NEWID() AS conceptId,
                                                                 V3UUT1 AS UFT1,V3UUT2 AS UFT2,V3UUT3 AS UFT3,V3UUA1 AS UFAMT1,V3UUA2 AS UFAMT2,V3UUA3 AS UFAMT3,V3SEQN AS sequence, ISNULL(V3DESC,'NULL') AS description,
                                                                 '' AS Accountpattern, ISNULL(V3UNMSR,'NULL') AS unitId,  ISNULL(V3CEUW,0) AS weightPiece, ABS(V3IMPO) AS total FROM MXEIDT WITH (NOLOCK) WHERE V3CONO='{0}' AND V3SERIE='{1}' AND V3FOLIO='{2}' ";
+
+        public static string SelectMXEIKits { get; set; } = @"SELECT V3CNID AS noIdentification,ABS(V3CANT) AS quantity,ABS(V3UNPR) AS unitvalue,NEWID() AS PartId,
+                                                                V3UUT1 AS UFT1,V3UUT2 AS UFT2,V3UUT3 AS UFT3,V3UUA1 AS UFAMT1,V3UUA2 AS UFAMT2,V3UUA3 AS UFAMT3,V3SEQN AS sequence, ISNULL(V3DESC,'NULL') AS description,
+                                                                ISNULL(V3UNMSR,'NULL') AS unit, ABS(V3IMPO) AS import FROM MXEIPTS WITH (NOLOCK) WHERE V3CONO='{0}' AND V3SERIE='{1}' AND V3FOLIO='{2}'";
+        
         //Agregado por JL para XA, se quita la columna del peso
         public static string SelectNodoConceptoXA { get; set; } = @"SELECT V3CNID AS noIdentification,ABS(V3CANT) AS quantity,ABS(V3UNPR) AS unitvalue,ABS(ISNULL(V3DISC,0)) AS discount,NEWID() AS conceptId,
                                                                 V3UUT1 AS UFT1,V3UUT2 AS UFT2,V3UUT3 AS UFT3,V3UUA1 AS UFAMT1,V3UUA2 AS UFAMT2,V3UUA3 AS UFAMT3,V3SEQN AS sequence, ISNULL(V3DESC,'NULL') AS description,
@@ -404,6 +413,10 @@ UFAMT1,UFAMT2,UFAMT3,sequence,Accountpattern,weightPiece)
 VALUES('{0}','{1}',RTRIM(LTRIM(@prodServId)),RTRIM(LTRIM(ISNULL(@UFT3,@noIdentification))),@quantity,RTRIM(LTRIM(@unitId)),
 RTRIM(LTRIM(@unit)),RTRIM(LTRIM(@description)),@unitvalue,@total,@discount,@conceptId,RTRIM(LTRIM(@UFT1)),RTRIM(LTRIM(@UFT2)),RTRIM(LTRIM(@UFT3)),
 @UFAMT1,@UFAMT2,RTRIM(LTRIM(@UFAMT3)),@sequence,@Accountpattern,@weightPiece) ";
+
+
+        public static string InsertKitsParts{ get; set; } = @"Insert Into ZMX_Part WITH(ROWLOCK) (ProdServId,SiteRef,noIdentification,qty,unit,description,unitvalue,import,conceptId,PartID)
+VALUES(@ProdServId,'{0}',@noIdentification,@quantity,@unit,@description,@unitvalue,@import,(SELECT CONCEPTID FROM ZMX_CONCEPT WHERE VoucherID='{1}' AND sequence=@sequence),@PartID)";
 
         //Agregado por JL para insertar la informacion del concepto para XA, no considera el peso
         public static string InsertNodoConceptoXA { get; set; } = @"SET @UFT3 = NULLIF(@UFT3,'');
@@ -474,6 +487,10 @@ DELETE ZMX_CustomsInformation FROM ZMX_CustomsInformation i INNER JOIN ZMX_Conce
 WHERE c.voucherId=  '{0}' ;
 DELETE ZMX_TaxConcept FROM ZMX_TaxConcept t INNER JOIN ZMX_Concept c ON c.conceptId=t.conceptId
 WHERE c.voucherId=  '{0}' ; ";
+
+         public static string DeleteKits { get; set; } = @"
+DELETE ZMX_Part FROM ZMX_Part i INNER JOIN ZMX_Concept c ON c.conceptId=i.conceptId
+WHERE c.voucherId=  '{0}';";
 
         //Agregado por JL, para el problema de los conceptos faltantes
         public static string DeleteConceptos { get; set; } = @"
@@ -1342,9 +1359,8 @@ WHERE V9CONO = '{0}' AND V9SERIE =  '{1}' AND V9FOLIO = '{2}' AND VARCHAR_FORMAT
   COALESCE(VRDSER,'') AS VRDSER,  COALESCE(VRDFOL,'') AS VRDFOL,  COALESCE(VRDCUR,'') AS VRDCUR,  
   COALESCE(VREXRT,0) AS VREXRT,  COALESCE(VRMTPG,'') AS VRMTPG,  COALESCE(VRNCUO,0) AS VRNCUO,  
   COALESCE(VRPSDO,0) AS VRPSDO,  COALESCE(VRMPAG,0) AS VRMPAG,  COALESCE(VRNSDO,0) AS VRNSDO ,  
-  VARCHAR_FORMAT(V0DATE,'YYYY-MM-DD') AS V0DATE
---CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (V0DATE)
---ELSE (SELECT  (cast(V0DATE as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS V0DATE
+CASE WHEN (SELECT COUNT(*) FROM MXEIHD WHERE V0DATE=VARCHAR_FORMAT('0001-01-01','YYYY-MM-DD') AND V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') = 1 THEN (V0DATE)
+ELSE (SELECT  (cast(V0DATE as char(200) ccsid 037))  FROM MXEIHD WHERE  V0CONO='{0}' AND V0SERIE='{1}' AND V0FOLIO='{2}') END AS V0DATE
   FROM MXEIHD  
   LEFT JOIN MXEIPY ON V0CONO=VQCONO AND V0SERIE=VQSERIE AND V0FOLIO=VQFOLIO 
   LEFT JOIN MXEIPX ON V0CONO=VRCONO AND V0SERIE=VRSERIE AND V0FOLIO=VRFOLIO 
