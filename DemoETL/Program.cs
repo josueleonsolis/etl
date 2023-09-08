@@ -251,10 +251,10 @@ namespace DemoETL
                             Console.WriteLine("Fin Proceso de documentos relacionados a facturas");
                         }
                     }
-
-
-
-                    Console.WriteLine("GlobalStrings.V9CFDIREL" + GlobalStrings.V9CFDIREL);
+                  
+                   
+                    
+                        Console.WriteLine("GlobalStrings.V9CFDIREL" + GlobalStrings.V9CFDIREL);
                     objEtl.UpdateMXEIRQ("ERP", int.Parse(Parameter7), msg, int.Parse(Parameter9), int.Parse(Parameter10), GlobalStrings.V9CFDIREL);
                     //Actualizar HD
                     Console.WriteLine("UpdateHD");
